@@ -108,7 +108,7 @@
       <inertia
         ixx="7.9394E-07"
         ixy="7.1746E-41"
-        ixz="4.0247E-41"
+        ixz="1.1882E-39"
         iyy="4.5352E-07"
         iyz="2.3812E-39"
         izz="4.5352E-07" />
@@ -154,7 +154,7 @@
     name="right_front_wheel">
     <inertial>
       <origin
-        xyz="0.005 6.2103E-16 -5.5511E-17"
+        xyz="0.005 2.4945E-15 -5.5511E-17"
         rpy="0 0 0" />
       <mass
         value="0.0067858" />
@@ -207,7 +207,7 @@
     name="right_rear_wheel">
     <inertial>
       <origin
-        xyz="0.005 2.9525E-15 -5.5511E-17"
+        xyz="0.005 1.1817E-14 -5.5511E-17"
         rpy="0 0 0" />
       <mass
         value="0.0067858" />
@@ -255,5 +255,63 @@
       link="right_rear_wheel" />
     <axis
       xyz="0 1 0" />
+  </joint>
+  <link
+    name="radar_link">
+    <inertial>
+      <origin
+        xyz="1.3878E-17 0.0075 0"
+        rpy="0 0 0" />
+      <mass
+        value="0.014432" />
+      <inertia
+        ixx="1.3755E-06"
+        ixy="-3.6604E-39"
+        ixz="4.142E-54"
+        iyy="2.2099E-06"
+        iyz="7.8275E-38"
+        izz="1.3755E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://autoVehicle/meshes/radar_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://autoVehicle/meshes/radar_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="radar_joint"
+    type="revolute">
+    <origin
+      xyz="0.081864 0.046756 0.061068"
+      rpy="1.5708 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="radar_link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="0"
+      upper="360"
+      effort="0"
+      velocity="0" />
   </joint>
 </robot>
