@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sdf version="1.6">
+  <world name="course_test">
+
+    <!-- lighting: directional light -->
+    <light type="directional" name="sun">
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+      <cast_shadows>true</cast_shadows>
+    </light>
+
+    <!-- ground plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ============================================================ -->
+    <!-- PATH MODEL: flat straight → 45° ramp → elevated flat → T-junction -->
+    <!-- Path width: 1.5 m   Wall height: 0.5 m   Wall thickness: 0.1 m -->
+    <!-- ============================================================ -->
+
+    <model name="test_course">
+      <static>true</static>
+
+      <!-- ===== SEGMENT 1: flat straight, X = 0 → 20, Z = 0 ===== -->
+      <!-- floor -->
+      <link name="seg1_floor">
+        <pose>10 0 0.025 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>20 1.5 0.05</size></box></geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>20 1.5 0.05</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- seg1 left wall -->
+      <link name="seg1_wall_left">
+        <pose>10 -0.8 0.25 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>20 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>20 0.1 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- seg1 right wall -->
+      <link name="seg1_wall_right">
+        <pose>10 0.8 0.25 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>20 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>20 0.1 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- ===== SEGMENT 2: 45° ramp, length 1 m along slope ===== -->
+      <!-- ΔX = cos45° ≈ 0.7071,  ΔZ = sin45° ≈ 0.7071 -->
+      <!-- ramp floor: centre = (20.3536, 0, 0.3536), pitch = -0.7854 -->
+      <link name="seg2_floor">
+        <pose>20.3536 0 0.3536 0 -0.7854 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.0 1.5 0.05</size></box></geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.0 1.5 0.05</size></box></geometry>
+          <material><ambient>0.4 0.4 0.4 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- seg2 left wall -->
+      <link name="seg2_wall_left">
+        <pose>20.3536 -0.8 0.3536 0 -0.7854 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.0 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.0 0.1 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- seg2 right wall -->
+      <link name="seg2_wall_right">
+        <pose>20.3536 0.8 0.3536 0 -0.7854 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.0 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.0 0.1 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- ===== SEGMENT 3: elevated flat, X = 20.7071 → 21.7071, Z = 0.7071 ===== -->
+      <!-- floor -->
+      <link name="seg3_floor">
+        <pose>21.2071 0 0.7321 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.0 1.5 0.05</size></box></geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.0 1.5 0.05</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- seg3 left wall -->
+      <link name="seg3_wall_left">
+        <pose>21.2071 -0.8 0.9571 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.0 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.0 0.1 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- seg3 right wall -->
+      <link name="seg3_wall_right">
+        <pose>21.2071 0.8 0.9571 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.0 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.0 0.1 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- ===== T-JUNCTION (at X = 21.7071, Z = 0.7071) ===== -->
+      <!-- The junction extends ±2 m along Y -->
+      <!-- junction floor (cross-shaped, main bar spans Y from -2 to +2) -->
+      <link name="junction_floor">
+        <pose>21.7071 0 0.7321 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.5 4.0 0.05</size></box></geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.5 4.0 0.05</size></box></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- junction: +Y branch left wall (X = 20.9571 side) -->
+      <link name="junction_wall_yl_left">
+        <pose>20.9571 1.0 0.9571 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>0.1 2.0 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 2.0 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- junction: +Y branch right wall (X = 22.4571 side) -->
+      <link name="junction_wall_yr_right">
+        <pose>22.4571 1.0 0.9571 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>0.1 2.0 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 2.0 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- junction: -Y branch left wall (X = 20.9571 side) -->
+      <link name="junction_wall_yl_left_neg">
+        <pose>20.9571 -1.0 0.9571 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>0.1 2.0 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 2.0 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- junction: -Y branch right wall (X = 22.4571 side) -->
+      <link name="junction_wall_yr_right_neg">
+        <pose>22.4571 -1.0 0.9571 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>0.1 2.0 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 2.0 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- junction: +Y end cap wall -->
+      <link name="junction_wall_end_pos_y">
+        <pose>21.7071 2.05 0.9571 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.5 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.5 0.1 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+      <!-- junction: -Y end cap wall -->
+      <link name="junction_wall_end_neg_y">
+        <pose>21.7071 -2.05 0.9571 0 0 0</pose>
+        <collision name="collision">
+          <geometry><box><size>1.5 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.5 0.1 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.2 1</ambient></material>
+        </visual>
+      </link>
+
+    </model>
+
+
+  </world>
+</sdf>
