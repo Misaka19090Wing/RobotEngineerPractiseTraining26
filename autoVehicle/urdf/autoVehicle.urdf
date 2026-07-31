@@ -8,17 +8,17 @@
     name="base_link">
     <inertial>
       <origin
-        xyz="0.0661587487693351 0.10996139270106 0.0365681596458918"
+        xyz="-0.0816075005125103 0.0873478840213072 0.0239665610527139"
         rpy="0 0 0" />
       <mass
-        value="0.2772" />
+        value="0.446602219201247" />
       <inertia
-        ixx="0.0006322239"
-        ixy="6.50381734647845E-20"
-        ixz="5.09208139085429E-23"
-        iyy="0.0004560864"
-        iyz="4.02591404648891E-20"
-        izz="0.0010816575" />
+        ixx="0.000480015242688325"
+        ixy="-5.98320560811355E-19"
+        ixz="2.06288927003206E-21"
+        iyy="0.000699327543402836"
+        iyz="2.02981918345116E-21"
+        izz="0.00116265232920819" />
     </inertial>
     <visual>
       <origin
@@ -48,16 +48,21 @@
     name="left_front_wheel">
     <inertial>
       <origin
+<<<<<<< Updated upstream
         xyz="-0.02 -3.4694E-18 -2.7756E-17"
         rpy="0 -1.5708 0" />
+=======
+        xyz="-0.013718 0.163 0.0063208"
+        rpy="0 0 0" />
+>>>>>>> Stashed changes
       <mass
         value="0.0067858" />
       <inertia
-        ixx="7.9394E-07"
-        ixy="-7.1746E-41"
-        ixz="1.1882E-39"
-        iyy="4.5352E-07"
-        iyz="-2.3618E-39"
+        ixx="4.5352E-07"
+        ixy="1.1882E-39"
+        ixz="9.7184E-42"
+        iyy="7.9394E-07"
+        iyz="-1.0655E-39"
         izz="4.5352E-07" />
     </inertial>
     <visual>
@@ -87,29 +92,43 @@
     name="left_front_joint"
     type="continuous">
     <origin
+<<<<<<< Updated upstream
         xyz="0.16516 0.040076 0.018568"
         rpy="1.5708 0 0" />
+=======
+      xyz="0 0 0"
+      rpy="0 0 0" />
+>>>>>>> Stashed changes
     <parent
       link="base_link" />
     <child
       link="left_front_wheel" />
     <axis
+<<<<<<< Updated upstream
       xyz="0 0 -1" />
+=======
+      xyz="0 1 0" />
+>>>>>>> Stashed changes
   </joint>
   <link
     name="left_rear_wheel">
     <inertial>
       <origin
+<<<<<<< Updated upstream
         xyz="-0.022287 0 -0.00016849"
         rpy="0 -1.5708 0" />
+=======
+        xyz="-0.15349 0.163 0.0063208"
+        rpy="0 0 0" />
+>>>>>>> Stashed changes
       <mass
         value="0.0067858" />
       <inertia
-        ixx="7.9394E-07"
-        ixy="7.1746E-41"
-        ixz="1.1882E-39"
-        iyy="4.5352E-07"
-        iyz="2.3812E-39"
+        ixx="4.5352E-07"
+        ixy="1.1882E-39"
+        ixz="9.7184E-42"
+        iyy="7.9394E-07"
+        iyz="-1.0655E-39"
         izz="4.5352E-07" />
     </inertial>
     <visual>
@@ -139,8 +158,13 @@
     name="left_rear_joint"
     type="continuous">
     <origin
+<<<<<<< Updated upstream
         xyz="0.16745 0.17968 0.018568"
         rpy="1.5708 0 0" />
+=======
+      xyz="0 0 0"
+      rpy="0 0 0" />
+>>>>>>> Stashed changes
     <parent
       link="base_link" />
     <child
@@ -152,16 +176,21 @@
     name="right_front_wheel">
     <inertial>
       <origin
+<<<<<<< Updated upstream
         xyz="0.005 2.4945E-15 -5.5511E-17"
         rpy="0 -1.5708 0" />
+=======
+        xyz="-0.013603 0.005 0.0063208"
+        rpy="0 0 0" />
+>>>>>>> Stashed changes
       <mass
         value="0.0067858" />
       <inertia
-        ixx="7.9394E-07"
-        ixy="-5.9054E-23"
-        ixz="-3.562E-21"
-        iyy="4.5352E-07"
-        iyz="6.1331E-37"
+        ixx="4.5352E-07"
+        ixy="-3.5626E-21"
+        ixz="-9.7184E-42"
+        iyy="7.9394E-07"
+        iyz="1.0655E-39"
         izz="4.5352E-07" />
     </inertial>
     <visual>
@@ -191,8 +220,13 @@
     name="right_front_joint"
     type="continuous">
     <origin
+<<<<<<< Updated upstream
         xyz="-0.0078413 0.039961 0.018568"
         rpy="1.5708 0 3.1416" />
+=======
+      xyz="0 0 0"
+      rpy="0 0 0" />
+>>>>>>> Stashed changes
     <parent
       link="base_link" />
     <child
@@ -204,16 +238,21 @@
     name="right_rear_wheel">
     <inertial>
       <origin
+<<<<<<< Updated upstream
         xyz="0.005 1.1817E-14 -5.5511E-17"
         rpy="0 -1.5708 0" />
+=======
+        xyz="-0.1536 0.005 0.0063208"
+        rpy="0 0 0" />
+>>>>>>> Stashed changes
       <mass
         value="0.0067858" />
       <inertia
-        ixx="7.9394E-07"
-        ixy="-5.9054E-23"
-        ixz="-3.5147E-21"
-        iyy="4.5352E-07"
-        iyz="6.1658E-37"
+        ixx="4.5352E-07"
+        ixy="-3.5062E-21"
+        ixz="1.705E-39"
+        iyy="7.9394E-07"
+        iyz="-8.4302E-40"
         izz="4.5352E-07" />
     </inertial>
     <visual>
@@ -243,8 +282,13 @@
     name="right_rear_joint"
     type="continuous">
     <origin
+<<<<<<< Updated upstream
         xyz="-0.0078413 0.17996 0.018568"
         rpy="1.5708 0 3.1416" />
+=======
+      xyz="0 0 0"
+      rpy="0 0 0" />
+>>>>>>> Stashed changes
     <parent
       link="base_link" />
     <child
@@ -256,17 +300,17 @@
     name="radar_link">
     <inertial>
       <origin
-        xyz="1.3878E-17 0.0075 0"
+        xyz="-0.020398 0.099705 0.056321"
         rpy="0 0 0" />
       <mass
         value="0.014432" />
       <inertia
         ixx="1.3755E-06"
-        ixy="-3.6604E-39"
-        ixz="4.142E-54"
-        iyy="2.2099E-06"
-        iyz="7.8275E-38"
-        izz="1.3755E-06" />
+        ixy="0"
+        ixz="-1.023E-39"
+        iyy="1.3755E-06"
+        iyz="-3.6604E-39"
+        izz="2.2099E-06" />
     </inertial>
     <visual>
       <origin
@@ -296,14 +340,23 @@
     name="radar_joint"
     type="continuous">
     <origin
-      xyz="0.081864 0.046756 0.061068"
-      rpy="1.5708 0 0" />
+      xyz="0 0 0"
+      rpy="0 0 0" />
     <parent
       link="base_link" />
     <child
       link="radar_link" />
     <axis
+<<<<<<< Updated upstream
       xyz="0 1 0" />
+=======
+      xyz="0 0 1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+>>>>>>> Stashed changes
   </joint>
 
   <gazebo>
