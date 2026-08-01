@@ -20,7 +20,14 @@
         iyz="-4.95623146846087E-19"
         izz="0.00116265232920818" />
     </inertial>
-    <visual>
+    
+    <collision>
+      <origin xyz="0 0 0.0318" rpy="0 0 0" />
+      <geometry>
+        <box size="0.165 0.14 0.0575" />
+      </geometry>
+    </collision>
+<visual>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -34,15 +41,7 @@
           rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
       </material>
     </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://autoVehicle/meshes/base_link.STL" />
-      </geometry>
-    </collision>
+    
   </link>
   <link
     name="left_front_wheel">
@@ -79,9 +78,17 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://autoVehicle/meshes/left_front_wheel.STL" />
+        <sphere radius="0.02" />
       </geometry>
+      <surface>
+        <friction>
+          <ode><mu>100.0</mu><mu2>100.0</mu2></ode>
+          <dart>
+            <primary_friction>100.0</primary_friction>
+            <secondary_friction>100.0</secondary_friction>
+          </dart>
+        </friction>
+      </surface>
     </collision>
   </link>
   <joint
@@ -132,9 +139,17 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://autoVehicle/meshes/left_rear_wheel.STL" />
+        <sphere radius="0.02" />
       </geometry>
+      <surface>
+        <friction>
+          <ode><mu>100.0</mu><mu2>100.0</mu2></ode>
+          <dart>
+            <primary_friction>100.0</primary_friction>
+            <secondary_friction>100.0</secondary_friction>
+          </dart>
+        </friction>
+      </surface>
     </collision>
   </link>
   <joint
@@ -185,9 +200,17 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://autoVehicle/meshes/right_rear_wheel.STL" />
+        <sphere radius="0.02" />
       </geometry>
+      <surface>
+        <friction>
+          <ode><mu>100.0</mu><mu2>100.0</mu2></ode>
+          <dart>
+            <primary_friction>100.0</primary_friction>
+            <secondary_friction>100.0</secondary_friction>
+          </dart>
+        </friction>
+      </surface>
     </collision>
   </link>
   <joint
@@ -238,9 +261,17 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://autoVehicle/meshes/right_front_wheel.STL" />
+        <sphere radius="0.02" />
       </geometry>
+      <surface>
+        <friction>
+          <ode><mu>100.0</mu><mu2>100.0</mu2></ode>
+          <dart>
+            <primary_friction>100.0</primary_friction>
+            <secondary_friction>100.0</secondary_friction>
+          </dart>
+        </friction>
+      </surface>
     </collision>
   </link>
   <joint
@@ -309,4 +340,61 @@
     <axis
       xyz="0 0 1" />
   </joint>
+
+
+  <gazebo reference="base_link">
+    <material>Gazebo/LightGray</material>
+  </gazebo>
+
+  <gazebo reference="left_front_wheel">
+    <material>Gazebo/Blue</material>
+    <mu1>100.0</mu1>
+    <mu2>50.0</mu2>
+  </gazebo>
+
+  <gazebo reference="left_rear_wheel">
+    <material>Gazebo/Blue</material>
+    <mu1>100.0</mu1>
+    <mu2>50.0</mu2>
+  </gazebo>
+
+  <gazebo reference="right_front_wheel">
+    <material>Gazebo/Blue</material>
+    <mu1>100.0</mu1>
+    <mu2>50.0</mu2>
+  </gazebo>
+
+  <gazebo reference="right_rear_wheel">
+    <material>Gazebo/Blue</material>
+    <mu1>100.0</mu1>
+    <mu2>50.0</mu2>
+  </gazebo>
+
+
+
+
+  <gazebo>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <joint_name>left_front_joint</joint_name>
+      <use_velocity_commands>true</use_velocity_commands>
+    </plugin>
+  </gazebo>
+  <gazebo>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <joint_name>left_rear_joint</joint_name>
+      <use_velocity_commands>true</use_velocity_commands>
+    </plugin>
+  </gazebo>
+  <gazebo>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <joint_name>right_front_joint</joint_name>
+      <use_velocity_commands>true</use_velocity_commands>
+    </plugin>
+  </gazebo>
+  <gazebo>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <joint_name>right_rear_joint</joint_name>
+      <use_velocity_commands>true</use_velocity_commands>
+    </plugin>
+  </gazebo>
 </robot>
