@@ -43,7 +43,7 @@
         <collision name="collision">
           <geometry><box><size>20 1.5 0.05</size></box></geometry>
           <surface>
-            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode><dart><primary_friction>1.0</primary_friction><secondary_friction>1.0</secondary_friction></dart></friction>
           </surface>
         </collision>
         <visual name="visual">
@@ -84,7 +84,7 @@
         <collision name="collision">
           <geometry><box><size>1.0 1.5 0.05</size></box></geometry>
           <surface>
-            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode><dart><primary_friction>1.0</primary_friction><secondary_friction>1.0</secondary_friction></dart></friction>
           </surface>
         </collision>
         <visual name="visual">
@@ -124,7 +124,7 @@
         <collision name="collision">
           <geometry><box><size>1.0 1.5 0.05</size></box></geometry>
           <surface>
-            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode><dart><primary_friction>1.0</primary_friction><secondary_friction>1.0</secondary_friction></dart></friction>
           </surface>
         </collision>
         <visual name="visual">
@@ -165,7 +165,7 @@
         <collision name="collision">
           <geometry><box><size>1.5 4.0 0.05</size></box></geometry>
           <surface>
-            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode><dart><primary_friction>1.0</primary_friction><secondary_friction>1.0</secondary_friction></dart></friction>
           </surface>
         </collision>
         <visual name="visual">

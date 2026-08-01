@@ -5,8 +5,11 @@ project(autoVehicle)
 find_package(ament_cmake REQUIRED)
 
 # install directories
-install(DIRECTORY config launch meshes urdf world
+install(DIRECTORY config launch meshes urdf world scripts
   DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()
+install(PROGRAMS scripts/diff_drive_controller.py
+  DESTINATION lib/${PROJECT_NAME}
+)
