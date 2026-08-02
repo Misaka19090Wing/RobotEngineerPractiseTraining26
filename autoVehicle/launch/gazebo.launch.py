@@ -13,7 +13,7 @@ def generate_launch_description():
     pkg_share = get_package_share_directory('autoVehicle')
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
 
-    world_arg = DeclareLaunchArgument('world', default_value='test_flat.sdf')
+    world_arg = DeclareLaunchArgument('world', default_value='course_test.sdf')
     world_name = LaunchConfiguration('world')
 
     # Gazebo
