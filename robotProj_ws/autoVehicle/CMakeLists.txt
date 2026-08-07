@@ -13,6 +13,7 @@ ament_package()
 install(PROGRAMS
   scripts/diff_drive_controller.py
   scripts/pointcloud_mapper.py
+  scripts/synthetic_lidar.py
   scripts/pose_tf_broadcaster.py
   DESTINATION lib/${PROJECT_NAME}
 )

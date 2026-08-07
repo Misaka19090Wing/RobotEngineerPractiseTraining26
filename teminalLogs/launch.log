@@ -1,0 +1,117 @@
+[INFO] [launch]: All log files can be found below /home/etertain9/.ros/log/2026-08-07-20-20-48-373856-etertain9-VMware-Virtual-Platform-4694
+[INFO] [launch]: Default logging verbosity is set to INFO
+WARNING: Package name "autoVehicle" does not follow the naming conventions. It should start with a lower case letter and only contain lower case letters, digits, underscores, and dashes.
+[INFO] [gazebo-1]: process started with pid [5151]
+[INFO] [robot_state_publisher-2]: process started with pid [5153]
+[INFO] [joint_state_publisher-3]: process started with pid [5156]
+[INFO] [static_transform_publisher-4]: process started with pid [5157]
+[INFO] [static_transform_publisher-5]: process started with pid [5159]
+[INFO] [parameter_bridge-6]: process started with pid [5162]
+[INFO] [parameter_bridge-7]: process started with pid [5165]
+[INFO] [parameter_bridge-8]: process started with pid [5167]
+[INFO] [parameter_bridge-9]: process started with pid [5169]
+[INFO] [parameter_bridge-10]: process started with pid [5172]
+[INFO] [parameter_bridge-11]: process started with pid [5173]
+[INFO] [parameter_bridge-12]: process started with pid [5174]
+[INFO] [parameter_bridge-13]: process started with pid [5177]
+[INFO] [rviz2-14]: process started with pid [5178]
+[static_transform_publisher-5] [INFO] [1786105249.135011312] [tf_odom_fallback]: Spinning until stopped - publishing transform
+[static_transform_publisher-5] translation: ('0.000000', '0.000000', '0.000000')
+[static_transform_publisher-5] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-5] from 'odom' to 'base_footprint'
+[static_transform_publisher-4] [INFO] [1786105249.135717792] [tf_footprint_to_base]: Spinning until stopped - publishing transform
+[static_transform_publisher-4] translation: ('0.000000', '0.000000', '0.000000')
+[static_transform_publisher-4] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-4] from 'base_footprint' to 'base_link'
+[robot_state_publisher-2] [WARN] [1786105249.151719992] [kdl_parser]: The root link base_link has an inertia specified in the URDF, but KDL does not support a root link with an inertia.  As a workaround, you can add an extra dummy link to your URDF.
+[robot_state_publisher-2] [INFO] [1786105249.151851620] [robot_state_publisher]: Robot initialized
+[parameter_bridge-13] [INFO] [1786105249.167708644] [bridge_right_rear_joint_vel]: Creating ROS->GZ Bridge: [/model/autoVehicle/joint/right_rear_joint/cmd_vel (std_msgs/msg/Float64) -> /model/autoVehicle/joint/right_rear_joint/cmd_vel (gz.msgs.Double)] (Lazy 0)
+[parameter_bridge-10] [INFO] [1786105249.167711740] [bridge_left_front_joint_vel]: Creating ROS->GZ Bridge: [/model/autoVehicle/joint/left_front_joint/cmd_vel (std_msgs/msg/Float64) -> /model/autoVehicle/joint/left_front_joint/cmd_vel (gz.msgs.Double)] (Lazy 0)
+[parameter_bridge-7] [INFO] [1786105249.198664819] [bridge_odom]: Creating GZ->ROS Bridge: [/model/autoVehicle/odometry (gz.msgs.Odometry) -> /model/autoVehicle/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-8] [INFO] [1786105249.213409537] [bridge_lidar_scan]: Creating GZ->ROS Bridge: [/model/autoVehicle/link/radar_link/sensor/lidar/scan (gz.msgs.LaserScan) -> /model/autoVehicle/link/radar_link/sensor/lidar/scan (sensor_msgs/msg/LaserScan)] (Lazy 0)
+[parameter_bridge-11] [INFO] [1786105249.216861003] [bridge_left_rear_joint_vel]: Creating ROS->GZ Bridge: [/model/autoVehicle/joint/left_rear_joint/cmd_vel (std_msgs/msg/Float64) -> /model/autoVehicle/joint/left_rear_joint/cmd_vel (gz.msgs.Double)] (Lazy 0)
+[parameter_bridge-6] [INFO] [1786105249.235929920] [bridge_cmd_vel]: Creating GZ->ROS Bridge: [/cmd_vel (gz.msgs.Twist) -> /cmd_vel (geometry_msgs/msg/Twist)] (Lazy 0)
+[parameter_bridge-6] [INFO] [1786105249.238481066] [bridge_cmd_vel]: Creating ROS->GZ Bridge: [/cmd_vel (geometry_msgs/msg/Twist) -> /cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-9] [INFO] [1786105249.238499879] [bridge_lidar_points]: Creating GZ->ROS Bridge: [/model/autoVehicle/link/radar_link/sensor/lidar/scan/points (gz.msgs.PointCloudPacked) -> /model/autoVehicle/link/radar_link/sensor/lidar/scan/points (sensor_msgs/msg/PointCloud2)] (Lazy 0)
+[parameter_bridge-12] [INFO] [1786105249.258973091] [bridge_right_front_joint_vel]: Creating ROS->GZ Bridge: [/model/autoVehicle/joint/right_front_joint/cmd_vel (std_msgs/msg/Float64) -> /model/autoVehicle/joint/right_front_joint/cmd_vel (gz.msgs.Double)] (Lazy 0)
+[rviz2-14] [INFO] [1786105249.569137610] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-14] [INFO] [1786105249.569314460] [rviz2]: OpenGl version: 4.3 (GLSL 4.3)
+[rviz2-14] [INFO] [1786105249.632604458] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-14] [INFO] [1786105249.762754257] [rviz2]: Subscribing to: /lidar_points
+[rviz2-14] 
+[rviz2-14] [INFO] [1786105249.765922010] [rviz2]: Subscribing to: /pointcloud_map
+[rviz2-14] 
+[joint_state_publisher-3] [INFO] [1786105249.808801934] [joint_state_publisher]: Waiting for robot_description to be published on the robot_description topic...
+[INFO] [create-15]: process started with pid [5722]
+[create-15] [INFO] [1786105252.110155777] [spawn_autoVehicle]: Requesting list of world names.
+[create-15] [INFO] [1786105252.537583367] [spawn_autoVehicle]: Waiting messages on topic [robot_description].
+[joint_state_publisher-3] [INFO] [1786105252.870929823] [joint_state_publisher]: Got description, configuring robot
+[create-15] [INFO] [1786105252.954360388] [spawn_autoVehicle]: Entity creation successful.
+[INFO] [pose_tf_broadcaster.py-16]: process started with pid [5746]
+[INFO] [create-15]: process has finished cleanly [pid 5722]
+[pose_tf_broadcaster.py-16] [INFO] [1786105253.538394920] [pose_tf_broadcaster]: PoseTFBroadcaster ready — listening on /model/autoVehicle/pose and /odom (identity fallback active until pose arrives)
+[INFO] [synthetic_lidar.py-17]: process started with pid [5764]
+[INFO] [diff_drive_controller.py-18]: process started with pid [5765]
+[diff_drive_controller.py-18] [INFO] [1786105254.442881364] [diff_drive_controller]: DiffDriveController ready
+[diff_drive_controller.py-18] [INFO] [1786105254.443341012] [diff_drive_controller]:   wheel_radius=0.015, wheel_separation=0.148
+[synthetic_lidar.py-17] [INFO] [1786105254.539330817] [synthetic_lidar]: SyntheticLidar | 360 rays @ 10.0Hz
+[INFO] [pointcloud_mapper.py-19]: process started with pid [5823]
+[pointcloud_mapper.py-19] [INFO] [1786105255.526106565] [pointcloud_mapper]: [INIT] PointCloudMapper ready | subs: /lidar_points, /scan | pub: /pointcloud_map @ 2.0Hz | save_dir: /home/etertain9/pointcloud_maps
+[synthetic_lidar.py-17] [INFO] [1786105256.790049810] [synthetic_lidar]: [SYNTH #1] LiDAR@(0.06,0.02,0.03) r[0]=30.00 r[90]=0.17
+[synthetic_lidar.py-17] [INFO] [1786105256.841054307] [synthetic_lidar]: [SYNTH #2] LiDAR@(0.56,0.02,0.09) r[0]=30.00 r[90]=0.17
+[synthetic_lidar.py-17] [INFO] [1786105256.940646241] [synthetic_lidar]: [SYNTH #3] LiDAR@(0.56,0.02,0.09) r[0]=30.00 r[90]=0.17
+[pointcloud_mapper.py-19] [INFO] [1786105258.221809164] [pointcloud_mapper]: [SCAN RX #1] frame=radar_link angles=[-3.14, 3.14] inc=0.0175 ranges=360 min=0.05000000074505806 max=30.0
+[pointcloud_mapper.py-19] [INFO] [1786105258.224130848] [pointcloud_mapper]: [SCAN RX #2] frame=radar_link angles=[-3.14, 3.14] inc=0.0175 ranges=360 min=0.05000000074505806 max=30.0
+[pointcloud_mapper.py-19] [INFO] [1786105258.242881401] [pointcloud_mapper]: [SCAN RX #3] frame=radar_link angles=[-3.14, 3.14] inc=0.0175 ranges=360 min=0.05000000074505806 max=30.0
+[pointcloud_mapper.py-19] Traceback (most recent call last):
+[pointcloud_mapper.py-19]   File "/home/etertain9/RobotEngineerPractiseTraining26/RobotEngineerPractiseTraining26/robotProj_ws/install/autoVehicle/lib/autoVehicle/pointcloud_mapper.py", line 239, in <module>
+[pointcloud_mapper.py-19]     main()
+[pointcloud_mapper.py-19]   File "/home/etertain9/RobotEngineerPractiseTraining26/RobotEngineerPractiseTraining26/robotProj_ws/install/autoVehicle/lib/autoVehicle/pointcloud_mapper.py", line 231, in main
+[pointcloud_mapper.py-19]     executor.spin()
+[pointcloud_mapper.py-19]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 359, in spin
+[pointcloud_mapper.py-19]     self._spin_once_impl()
+[pointcloud_mapper.py-19]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 1009, in _spin_once_impl
+[pointcloud_mapper.py-19]     future.result()  # raise any exceptions
+[pointcloud_mapper.py-19]     ^^^^^^^^^^^^^^^
+[pointcloud_mapper.py-19]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/task.py", line 109, in result
+[pointcloud_mapper.py-19]     raise self.exception()
+[pointcloud_mapper.py-19]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/task.py", line 286, in _execute_coroutine_step
+[pointcloud_mapper.py-19]     result = coro.send(None)
+[pointcloud_mapper.py-19]              ^^^^^^^^^^^^^^^
+[pointcloud_mapper.py-19]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 592, in handler
+[pointcloud_mapper.py-19]     await call_coroutine()
+[pointcloud_mapper.py-19]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 454, in _execute
+[pointcloud_mapper.py-19]     await await_or_execute(tmr.callback)
+[pointcloud_mapper.py-19]   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 115, in await_or_execute
+[pointcloud_mapper.py-19]     return callback(*args)
+[pointcloud_mapper.py-19]            ^^^^^^^^^^^^^^^
+[pointcloud_mapper.py-19]   File "/home/etertain9/RobotEngineerPractiseTraining26/RobotEngineerPractiseTraining26/robotProj_ws/install/autoVehicle/lib/autoVehicle/pointcloud_mapper.py", line 167, in publish_map_callback
+[pointcloud_mapper.py-19]     header.frame_id = 'odom'
+[pointcloud_mapper.py-19]     ^^^^^^^^^^^^^^^
+[pointcloud_mapper.py-19] AttributeError: 'Time' object has no attribute 'frame_id'
+[ERROR] [pointcloud_mapper.py-19]: process has died [pid 5823, exit code 1, cmd '/home/etertain9/RobotEngineerPractiseTraining26/RobotEngineerPractiseTraining26/robotProj_ws/install/autoVehicle/lib/autoVehicle/pointcloud_mapper.py --ros-args -r __node:=pointcloud_mapper --params-file /tmp/launch_params_ymk8xql8'].
+[INFO] [ros2-20]: process started with pid [5897]
+[ros2-20] /parameter_events
+[ros2-20] /rosout
+[ros2-20] /tf_static
+[INFO] [ros2-20]: process has finished cleanly [pid 5897]
+[synthetic_lidar.py-17] [INFO] [1786105261.640840875] [synthetic_lidar]: [SYNTH] 50 scans | pos=(0.56,0.02,0.10)
+[synthetic_lidar.py-17] [INFO] [1786105266.640615859] [synthetic_lidar]: [SYNTH] 100 scans | pos=(0.56,0.02,0.10)
+[synthetic_lidar.py-17] [INFO] [1786105271.640896123] [synthetic_lidar]: [SYNTH] 150 scans | pos=(0.56,0.02,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105276.641157980] [synthetic_lidar]: [SYNTH] 200 scans | pos=(0.56,0.02,0.11)
+[parameter_bridge-6] [INFO] [1786105277.876889132] [bridge_cmd_vel]: Passing message from ROS geometry_msgs/msg/Twist to Gazebo gz.msgs.Twist (showing msg only once per type)
+[parameter_bridge-10] [INFO] [1786105277.877279241] [bridge_left_front_joint_vel]: Passing message from ROS std_msgs/msg/Float64 to Gazebo gz.msgs.Double (showing msg only once per type)
+[parameter_bridge-12] [INFO] [1786105277.877358341] [bridge_right_front_joint_vel]: Passing message from ROS std_msgs/msg/Float64 to Gazebo gz.msgs.Double (showing msg only once per type)
+[parameter_bridge-13] [INFO] [1786105277.877371427] [bridge_right_rear_joint_vel]: Passing message from ROS std_msgs/msg/Float64 to Gazebo gz.msgs.Double (showing msg only once per type)
+[parameter_bridge-11] [INFO] [1786105277.877504994] [bridge_left_rear_joint_vel]: Passing message from ROS std_msgs/msg/Float64 to Gazebo gz.msgs.Double (showing msg only once per type)
+[synthetic_lidar.py-17] [INFO] [1786105281.641007586] [synthetic_lidar]: [SYNTH] 250 scans | pos=(1.16,0.03,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105286.640775429] [synthetic_lidar]: [SYNTH] 300 scans | pos=(1.54,-0.04,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105291.640896393] [synthetic_lidar]: [SYNTH] 350 scans | pos=(2.14,0.07,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105296.640913076] [synthetic_lidar]: [SYNTH] 400 scans | pos=(2.14,0.07,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105301.640766152] [synthetic_lidar]: [SYNTH] 450 scans | pos=(2.14,0.07,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105306.641203208] [synthetic_lidar]: [SYNTH] 500 scans | pos=(2.14,0.07,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105311.640997759] [synthetic_lidar]: [SYNTH] 550 scans | pos=(2.14,0.07,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105316.640949989] [synthetic_lidar]: [SYNTH] 600 scans | pos=(2.14,0.07,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105321.641414393] [synthetic_lidar]: [SYNTH] 650 scans | pos=(2.14,0.07,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105326.641176850] [synthetic_lidar]: [SYNTH] 700 scans | pos=(2.14,0.07,0.11)
+[synthetic_lidar.py-17] [INFO] [1786105331.641019938] [synthetic_lidar]: [SYNTH] 750 scans | pos=(2.14,0.07,0.11)

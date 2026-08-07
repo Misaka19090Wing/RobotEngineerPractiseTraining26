@@ -149,7 +149,17 @@ def generate_launch_description():
         name='pose_tf_broadcaster', output='screen',
     )
 
+
+    # Synthetic LiDAR — bypasses Gazebo sensor (VMware has no 3D)
     # 3D point cloud mapper: accumulate, publish /pointcloud_map, save PCD
+
+    # Synthetic LiDAR — bypasses Gazebo URDF sensor limitation
+    synthetic_lidar = Node(
+        package='autoVehicle', executable='synthetic_lidar.py',
+        name='synthetic_lidar', output='screen',
+        parameters=[{'num_samples': 360, 'rate_hz': 10.0}],
+    )
+
     pointcloud_mapper = Node(
         package='autoVehicle', executable='pointcloud_mapper.py',
         name='pointcloud_mapper', output='screen',
@@ -170,6 +180,7 @@ def generate_launch_description():
     # ── Timing ────────────────────────────────────────────────────
     delayed_spawn    = TimerAction(period=3.0, actions=[spawn_robot])
     delayed_pose_tf  = TimerAction(period=4.0, actions=[pose_tf])
+    delayed_synth   = TimerAction(period=5.0, actions=[synthetic_lidar])
     delayed_ctrl     = TimerAction(period=5.0, actions=[controller])
     delayed_mapper   = TimerAction(period=6.0, actions=[pointcloud_mapper])
 
@@ -187,6 +198,7 @@ def generate_launch_description():
         *bridge_joints,
         delayed_spawn,
         delayed_pose_tf,
+        delayed_synth,
         delayed_ctrl,
         delayed_mapper,
         TimerAction(period=10.0, actions=[ros_topic_diag]),

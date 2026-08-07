@@ -408,8 +408,7 @@
   </gazebo>
 
   <!-- 2D Laser scanner (CPU lidar) for point cloud mapping -->
-  <!-- Uses CPU ray-casting — no GPU required. 2D scans are accumulated
-       into a 3D map by tracking the robot's odometry. -->
+  <!-- 2D scans are accumulated into 3D map via robot odometry -->
   <gazebo reference="radar_link">
     <sensor name="lidar" type="lidar">
       <pose>0 0 0 0 0 0</pose>

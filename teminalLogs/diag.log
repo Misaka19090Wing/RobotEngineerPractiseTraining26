@@ -1,0 +1,60 @@
+=========================================
+  Point Cloud Mapping Diagnosis
+=========================================
+
+--- ROS topics (scan/lidar/odom) ---
+/lidar_points
+/odom
+/pointcloud_map
+/scan
+
+--- /scan info ---
+Type: sensor_msgs/msg/LaserScan
+Publisher count: 2
+Subscription count: 0
+
+--- /lidar_points info ---
+Type: sensor_msgs/msg/PointCloud2
+Publisher count: 1
+Subscription count: 1
+
+--- /odom info ---
+Type: nav_msgs/msg/Odometry
+Publisher count: 1
+Subscription count: 1
+
+--- /pointcloud_map info ---
+Type: sensor_msgs/msg/PointCloud2
+Publisher count: 0
+Subscription count: 1
+
+--- Gazebo LiDAR topic type ---
+No publishers on topic [/model/autoVehicle/link/radar_link/sensor/lidar/scan]
+Subscribers [Address, Message Type]:
+  tcp://192.168.65.128:43715, gz.msgs.LaserScan
+
+--- Gazebo PointCloud topic type ---
+No publishers on topic [/model/autoVehicle/link/radar_link/sensor/lidar/scan/points]
+Subscribers [Address, Message Type]:
+  tcp://192.168.65.128:35265, gz.msgs.PointCloudPacked
+
+--- Gazebo odometry topic type ---
+Publishers [Address, Message Type]:
+  tcp://192.168.65.128:43647, gz.msgs.Odometry
+Subscribers [Address, Message Type]:
+  tcp://192.168.65.128:44841, gz.msgs.Odometry
+
+--- TF frames ---
+Check /tmp/frames.pdf for TF tree
+
+--- Bridge nodes ---
+/bridge_cmd_vel
+/bridge_left_front_joint_vel
+/bridge_left_rear_joint_vel
+/bridge_lidar_points
+/bridge_lidar_scan
+/bridge_odom
+/bridge_right_front_joint_vel
+/bridge_right_rear_joint_vel
+
+Diagnostic complete. Send the output above.
