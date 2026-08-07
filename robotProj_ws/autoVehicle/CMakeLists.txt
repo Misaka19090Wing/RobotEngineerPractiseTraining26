@@ -10,6 +10,9 @@ install(DIRECTORY config launch meshes urdf world scripts
 )
 
 ament_package()
-install(PROGRAMS scripts/diff_drive_controller.py
+install(PROGRAMS
+  scripts/diff_drive_controller.py
+  scripts/pointcloud_mapper.py
+  scripts/pose_tf_broadcaster.py
   DESTINATION lib/${PROJECT_NAME}
 )

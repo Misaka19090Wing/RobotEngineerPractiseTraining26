@@ -1,0 +1,18 @@
+# ros_gz_bridge YAML config — LiDAR + Odometry bridges
+- ros_topic_name: "/odom"
+  gz_topic_name: "/model/autoVehicle/odometry"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/scan"
+  gz_topic_name: "/model/autoVehicle/link/radar_link/sensor/lidar/scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/lidar_points"
+  gz_topic_name: "/model/autoVehicle/link/radar_link/sensor/lidar/scan/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "gz.msgs.PointCloudPacked"
+  direction: GZ_TO_ROS
