@@ -116,7 +116,16 @@ class IntegratedMapper(Node):
             if r<RNG_MAX:
                 rng.append(r)
                 px=r*math.cos(ang); py=r*math.sin(ang); pz=0.0
-                wpts.append((r00*px+r01*py+r02*pz+lx, r10*px+r11*py+r12*pz+ly, r20*px+r21*py+r22*pz+lz, 0.4))
+                wx_w=r00*px+r01*py+r02*pz+lx
+                wy_w=r10*px+r11*py+r12*pz+ly
+                wz_w=r20*px+r21*py+r22*pz+lz
+                # Main hit point
+                wpts.append((wx_w, wy_w, wz_w, 0.4))
+                # Vertical wall fill: generate points from floor to wall top
+                fz_wall=floor_z(wx_w)
+                for vz in (fz_wall, fz_wall+0.1, fz_wall+0.2):
+                    if abs(vz-wz_w)>0.01:  # skip if same as hit point
+                        wpts.append((wx_w, wy_w, vz, 0.35))
             else:
                 rng.append(float('nan'))
             ang+=s.angle_increment
@@ -126,9 +135,9 @@ class IntegratedMapper(Node):
         # ── Floor scan ─────────────────────────────────────────────
         fp_pts=[]
         fp_world=[]
-        for ai in range(24):
-            az=ai*2*math.pi/24; dx=math.cos(az); dy=math.sin(az)
-            for ri in range(1,9):
+        for ai in range(36):
+            az=ai*2*math.pi/36; dx=math.cos(az); dy=math.sin(az)
+            for ri in range(1,11):
                 dist=ri*0.5; wx=lx+dx*dist; wy=ly+dy*dist; wz=floor_z(wx)
                 ok=True
                 if wx<CORR_END:
