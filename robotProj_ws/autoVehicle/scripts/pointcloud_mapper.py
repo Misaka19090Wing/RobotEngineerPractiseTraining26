@@ -11,6 +11,7 @@ DIAGNOSTIC LOGGING ENABLED — logs every first few messages + periodic stats.
 import math, struct, os, time
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from sensor_msgs.msg import PointCloud2, PointField, LaserScan
@@ -135,7 +136,7 @@ class PointCloudMapper(Node):
     def _lookup_transform(self, from_frame: str, tag: str):
         try:
             tf = self.tf_buffer.lookup_transform(
-                'odom', from_frame, rclpy.time.Time(),
+                'odom', from_frame, self.get_clock().now(),
                 timeout=rclpy.duration.Duration(seconds=0.5))
         except TransformException as e:
             if self._pc_count + self._scan_count <= 5:

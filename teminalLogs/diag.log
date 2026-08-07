@@ -11,12 +11,12 @@
 --- /scan info ---
 Type: sensor_msgs/msg/LaserScan
 Publisher count: 1
-Subscription count: 1
+Subscription count: 0
 
 --- /lidar_points info ---
 Type: sensor_msgs/msg/PointCloud2
 Publisher count: 1
-Subscription count: 2
+Subscription count: 1
 
 --- /odom info ---
 Type: nav_msgs/msg/Odometry
@@ -38,19 +38,14 @@ No subscribers on topic [/model/autoVehicle/link/radar_link/sensor/lidar/scan/po
 
 --- Gazebo odometry topic type ---
 Publishers [Address, Message Type]:
-  tcp://192.168.65.128:35763, gz.msgs.Odometry
+  tcp://192.168.65.128:38711, gz.msgs.Odometry
 Subscribers [Address, Message Type]:
-  tcp://192.168.65.128:45619, gz.msgs.Odometry
+  tcp://192.168.65.128:44245, gz.msgs.Odometry
 
 --- TF frames ---
 Check /tmp/frames.pdf for TF tree
 
 --- Bridge nodes ---
-/bridge_cmd_vel
-/bridge_left_front_joint_vel
-/bridge_left_rear_joint_vel
-/bridge_odom
-/bridge_right_front_joint_vel
-/bridge_right_rear_joint_vel
+(no bridge nodes found)
 
 Diagnostic complete. Send the output above.

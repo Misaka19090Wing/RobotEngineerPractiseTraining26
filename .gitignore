@@ -1,6 +1,8 @@
 build/
 install/
 log/
+teminalLogs/
 robotProj_ws/build/
 robotProj_ws/install/
 robotProj_ws/log/
+robotProj_ws/autoVehicle/config/frames*

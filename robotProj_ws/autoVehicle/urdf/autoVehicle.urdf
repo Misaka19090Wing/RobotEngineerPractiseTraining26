@@ -433,4 +433,27 @@
       <visualize>true</visualize>
     </sensor>
   </gazebo>
+
+  <!-- IMU sensor (for robot_localization / FAST-LIO2) -->
+  <gazebo reference="base_link">
+    <sensor name="imu" type="imu">
+      <pose>0 0 0 0 0 0</pose>
+      <topic>imu</topic>
+      <update_rate>200</update_rate>
+      <always_on>1</always_on>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian" mean="0" stddev="0.001"/></x>
+          <y><noise type="gaussian" mean="0" stddev="0.001"/></y>
+          <z><noise type="gaussian" mean="0" stddev="0.001"/></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian" mean="0" stddev="0.01"/></x>
+          <y><noise type="gaussian" mean="0" stddev="0.01"/></y>
+          <z><noise type="gaussian" mean="0" stddev="0.01"/></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
 </robot>
