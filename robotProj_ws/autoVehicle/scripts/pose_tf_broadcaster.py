@@ -47,6 +47,10 @@ class PoseTFBroadcaster(Node):
         self._publish_tf(msg.position.x, msg.position.y, msg.position.z,
                          msg.orientation.x, msg.orientation.y,
                          msg.orientation.z, msg.orientation.w)
+        if not self._has_live_pose:
+            self.get_logger().info(
+                f'[POSE RECEIVED] pos=({msg.position.x:.2f},{msg.position.y:.2f},{msg.position.z:.2f}) '
+                f'— switching to live odom→base_footprint TF')
         self._has_live_pose = True
 
     def odom_cb(self, msg: Odometry):
@@ -54,6 +58,10 @@ class PoseTFBroadcaster(Node):
         self._publish_tf(p.position.x, p.position.y, p.position.z,
                          p.orientation.x, p.orientation.y,
                          p.orientation.z, p.orientation.w)
+        if not self._has_live_pose:
+            self.get_logger().info(
+                f'[ODOM RECEIVED] pos=({p.position.x:.2f},{p.position.y:.2f},{p.position.z:.2f}) '
+                f'— switching to live odom→base_footprint TF')
         self._has_live_pose = True
 
     # ── fallback ─────────────────────────────────────────────────────

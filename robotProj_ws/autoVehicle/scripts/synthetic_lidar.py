@@ -1,133 +1,127 @@
 #!/usr/bin/env python3
 """
-Synthetic 2D LiDAR — mathematical ray-casting against the course_test geometry.
+Synthetic LiDAR — accurate course_test geometry.
 
-Since Gazebo Harmonic does not reliably process URDF-based <gazebo><sensor>
-elements when models are spawned via ros_gz_sim/create, this node bypasses
-Gazebo's sensor system entirely.
+- /scan (LaserScan):     horizontal wall scan (360 rays)
+- /lidar_points (PointCloud2): dense floor surface grid (ring pattern, ~200 pts)
 
-It uses the robot's ground-truth odometry (/odom) + TF (radar_link transform)
-to compute the LiDAR's world pose, then casts 360 rays against a mathematical
-model of the course (flat floor, 45° ramp, walls, T-junction).
-
-Publishes:
-  /scan  (sensor_msgs/LaserScan) — consumed by pointcloud_mapper
+The floor scanner projects points onto the ground plane at the LiDAR's height.
+As the robot moves up the 45° ramp, floor points trace the 3D surface.
 """
-import math
+import math, struct
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import LaserScan
-from nav_msgs.msg import Odometry
+from sensor_msgs.msg import LaserScan, PointCloud2, PointField
 from tf2_ros import Buffer, TransformListener, TransformException
 
-# ════════════════════════════════════════════════════════════════
-# Course geometry model — matches course_test.sdf
-# ════════════════════════════════════════════════════════════════
-HALF_W = 0.15          # half track width (inner wall edge Y)
-RAMP_X0, RAMP_X1 = 3.2, 4.3314
-RAMP_Z0, RAMP_Z1 = 0.0, 1.1314
-JUNCTION_X = 5.9314
-JUNCTION_Y = 1.6       # T extends Y ±1.6
-RANGE_MIN, RANGE_MAX = 0.05, 30.0
+HW = 0.15; RAMP_X0=3.2; RAMP_X1=4.3314; RAMP_Z0=0.0; RAMP_Z1=1.1314
+CORR_END=5.78; JUNC_X=5.9314; JUNC_L=5.78; JUNC_R=6.08
+JUNC_GAP=0.2; JUNC_MAX_Y=1.6; JUNC_END_Y=1.65
+RNG_MIN=0.05; RNG_MAX=30.0
 
-
-def floor_z_at(wx):
-    if wx < RAMP_X0:      return 0.0
-    if wx < RAMP_X1:      return RAMP_Z0 + (wx - RAMP_X0) / (RAMP_X1 - RAMP_X0) * (RAMP_Z1 - RAMP_Z0)
+def floor_z(wx):
+    if wx<RAMP_X0: return 0.0
+    if wx<RAMP_X1: return RAMP_Z0+(wx-RAMP_X0)/(RAMP_X1-RAMP_X0)*(RAMP_Z1-RAMP_Z0)
     return RAMP_Z1
 
-
-def cast_ray(ox, oy, angle):
-    """Return (range, wx, wy) for a single ray from (ox, oy) in direction angle."""
-    dx = math.cos(angle)
-    dy = math.sin(angle)
-
-    # Check wall intersections: left wall at y = -HALF_W, right wall at y = +HALF_W
-    t_hit = RANGE_MAX
-    for wall_y in (-HALF_W, HALF_W):
-        if abs(dy) < 1e-10:
-            continue
-        t = (wall_y - oy) / dy
-        if RANGE_MIN < t < t_hit:
-            ix = ox + t * dx
-            if 0 <= ix <= JUNCTION_X + 0.5:
-                t_hit = t
-
-    wx = ox + t_hit * dx
-    wy = oy + t_hit * dy
-    r = math.hypot(wx - ox, wy - oy)
-    return float(r)
-
+def raycast(ox, oy, angle):
+    dx=math.cos(angle); dy=math.sin(angle); best=RNG_MAX
+    if abs(dy)>1e-10:
+        for wy_val in (-HW,HW):
+            t=(wy_val-oy)/dy
+            if RNG_MIN<t<best:
+                ix=ox+t*dx
+                if 0<=ix<=CORR_END+0.01: best=t
+    if abs(dx)>1e-10:
+        t=(JUNC_L-ox)/dx
+        if RNG_MIN<t<best:
+            iy=oy+t*dy
+            if JUNC_GAP<=abs(iy)<=JUNC_MAX_Y+0.01: best=t
+    if abs(dx)>1e-10:
+        t=(JUNC_R-ox)/dx
+        if RNG_MIN<t<best:
+            iy=oy+t*dy
+            if abs(iy)<=JUNC_MAX_Y+0.01: best=t
+    if abs(dy)>1e-10:
+        for end_y in (-JUNC_END_Y,JUNC_END_Y):
+            t=(end_y-oy)/dy
+            if RNG_MIN<t<best:
+                ix=ox+t*dx
+                if JUNC_L<=ix<=JUNC_R+0.01: best=t
+    return float(best), float(ox+best*dx), float(oy+best*dy)
 
 class SyntheticLidar(Node):
     def __init__(self):
         super().__init__('synthetic_lidar')
-        self.declare_parameter('num_samples', 360)
-        self.declare_parameter('rate_hz', 10.0)
-        self.num = self.get_parameter('num_samples').value
-        self.hz = self.get_parameter('rate_hz').value
-
-        self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer, self)
-        self.scan_pub = self.create_publisher(LaserScan, '/scan', 10)
-
-        self._cnt = 0
-        self.get_logger().info(f'SyntheticLidar | {self.num} rays @ {self.hz}Hz')
-
-        # Publish on a timer instead of odom callback — ensures steady 10 Hz
-        self.timer = self.create_timer(1.0 / self.hz, self.tick)
+        self.tf_b=Buffer(); self.tf_l=TransformListener(self.tf_b,self)
+        self.sp=self.create_publisher(LaserScan,'/scan',10)
+        self.fp=self.create_publisher(PointCloud2,'/lidar_points',10)
+        self._cnt=0
+        self.get_logger().info('SyntheticLidar | 360 wall rays + floor surface @10Hz')
+        self.timer=self.create_timer(0.1,self.tick)
 
     def tick(self):
-        # Get LiDAR world pose via TF
         try:
-            tf = self.tf_buffer.lookup_transform(
-                'odom', 'radar_link', rclpy.time.Time(),
-                timeout=rclpy.duration.Duration(seconds=0.3))
-        except TransformException:
-            return
+            tf=self.tf_b.lookup_transform('odom','radar_link',
+                rclpy.time.Time(),timeout=rclpy.duration.Duration(seconds=0.3))
+        except TransformException: return
+        lx=tf.transform.translation.x; ly=tf.transform.translation.y
+        lz=tf.transform.translation.z; fz=floor_z(lx)
 
-        lx = tf.transform.translation.x
-        ly = tf.transform.translation.y
-        lz = tf.transform.translation.z  # not used directly; height comes from floor model
+        # ── 1. Wall scan ─────────────────────────────────────────────
+        s=LaserScan(); s.header.stamp=self.get_clock().now().to_msg()
+        s.header.frame_id='radar_link'
+        s.angle_min=-math.pi; s.angle_max=math.pi
+        s.angle_increment=2*math.pi/360; s.range_min=RNG_MIN; s.range_max=RNG_MAX
+        rng=[]; ang=s.angle_min
+        for _ in range(360):
+            r,_,_=raycast(lx,ly,ang)
+            rng.append(r if r<RNG_MAX else float('nan'))
+            ang+=s.angle_increment
+        s.ranges=rng; self.sp.publish(s)
 
-        # Build LaserScan
-        scan = LaserScan()
-        scan.header.stamp = self.get_clock().now().to_msg()
-        scan.header.frame_id = 'radar_link'
-        scan.angle_min = -math.pi
-        scan.angle_max = math.pi
-        scan.angle_increment = 2.0 * math.pi / self.num
-        scan.time_increment = 0.0
-        scan.scan_time = 1.0 / self.hz
-        scan.range_min = RANGE_MIN
-        scan.range_max = RANGE_MAX
+        # ── 2. Floor surface scan (dense ring pattern) ───────────────
+        # Cast rays at various azimuths + downward angles to hit the floor.
+        floor_pts=[]
+        n_azimuth=24   # 24 directions around the robot
+        n_range=8      # 8 distance steps per direction
+        for ai in range(n_azimuth):
+            az=ai*2*math.pi/n_azimuth
+            dx=math.cos(az); dy=math.sin(az)
+            for ri in range(1,n_range+1):
+                dist=ri*0.5  # 0.5m, 1.0m, ..., 4.0m
+                wx=lx+dx*dist; wy=ly+dy*dist; wz=floor_z(wx)
+                # Validate: point must be within corridor/junction
+                ok=True
+                if wx<CORR_END:
+                    if abs(wy)>HW: ok=False
+                else:
+                    if not(JUNC_L<=wx<=JUNC_R): ok=False
+                    if abs(wy)>JUNC_MAX_Y: ok=False
+                if ok:
+                    floor_pts.append((wx-lx,wy-ly,wz-lz,0.7))
 
-        angle = scan.angle_min
-        ranges = []
-        for _ in range(self.num):
-            r = cast_ray(lx, ly, angle)
-            ranges.append(r)
-            angle += scan.angle_increment
+        pc=PointCloud2(); pc.header.stamp=self.get_clock().now().to_msg()
+        pc.header.frame_id='radar_link'; pc.height=1; pc.width=len(floor_pts)
+        pc.fields=[PointField(name='x',offset=0,datatype=PointField.FLOAT32,count=1),
+                   PointField(name='y',offset=4,datatype=PointField.FLOAT32,count=1),
+                   PointField(name='z',offset=8,datatype=PointField.FLOAT32,count=1),
+                   PointField(name='intensity',offset=12,datatype=PointField.FLOAT32,count=1)]
+        pc.is_bigendian=False; pc.point_step=16; pc.row_step=16*len(floor_pts)
+        pc.is_dense=True
+        pc.data=b''.join(struct.pack('<ffff',x,y,z,i) for(x,y,z,i) in floor_pts)
+        self.fp.publish(pc)
 
-        scan.ranges = ranges
-        self.scan_pub.publish(scan)
-
-        self._cnt += 1
-        if self._cnt <= 3:
+        self._cnt+=1
+        if self._cnt<=3:
+            hits=sum(1 for r in rng if not math.isnan(r))
             self.get_logger().info(
-                f'[SYNTH #{self._cnt}] LiDAR@({lx:.2f},{ly:.2f},{lz:.2f}) '
-                f'r[0]={ranges[0]:.2f} r[90]={ranges[90]:.2f}'
-            )
-        elif self._cnt % 50 == 0:
+                f'[SYNTH #{self._cnt}] ({lx:.2f},{ly:.2f},{lz:.2f}) '
+                f'wall_hits={hits}/360 floor_pts={len(floor_pts)}')
+        elif self._cnt%50==0:
             self.get_logger().info(
-                f'[SYNTH] {self._cnt} scans | pos=({lx:.2f},{ly:.2f},{lz:.2f})'
-            )
-
+                f'[SYNTH] {self._cnt} | ({lx:.2f},{ly:.2f},{lz:.2f}) fl={len(floor_pts)}')
 
 def main():
-    rclpy.init()
-    rclpy.spin(SyntheticLidar())
-
-
-if __name__ == '__main__':
-    main()
+    rclpy.init(); rclpy.spin(SyntheticLidar())
+if __name__=='__main__': main()

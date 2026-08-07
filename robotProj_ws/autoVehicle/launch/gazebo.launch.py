@@ -95,27 +95,7 @@ def generate_launch_description():
     )
 
     # LiDAR LaserScan bridge (Gazebo → ROS /scan)
-    bridge_lidar_scan = Node(
-        package='ros_gz_bridge', executable='parameter_bridge',
-        name='bridge_lidar_scan', output='screen',
-        arguments=['/model/autoVehicle/link/radar_link/sensor/lidar/scan'
-                   '@sensor_msgs/msg/LaserScan'
-                   '[gz.msgs.LaserScan'],
-        remappings=[('/model/autoVehicle/link/radar_link/sensor/lidar/scan',
-                     '/scan')],
-    )
-
     # LiDAR PointCloud2 bridge (Gazebo → ROS /lidar_points)
-    bridge_lidar_points = Node(
-        package='ros_gz_bridge', executable='parameter_bridge',
-        name='bridge_lidar_points', output='screen',
-        arguments=['/model/autoVehicle/link/radar_link/sensor/lidar/scan/points'
-                   '@sensor_msgs/msg/PointCloud2'
-                   '[gz.msgs.PointCloudPacked'],
-        remappings=[('/model/autoVehicle/link/radar_link/sensor/lidar/scan/points',
-                     '/lidar_points')],
-    )
-
     # Diagnostic: list ROS topics 10s after startup
     ros_topic_diag = ExecuteProcess(
         cmd=['ros2', 'topic', 'list'],
@@ -148,7 +128,6 @@ def generate_launch_description():
         package='autoVehicle', executable='pose_tf_broadcaster.py',
         name='pose_tf_broadcaster', output='screen',
     )
-
 
     # Synthetic LiDAR — bypasses Gazebo sensor (VMware has no 3D)
     # 3D point cloud mapper: accumulate, publish /pointcloud_map, save PCD
@@ -193,8 +172,6 @@ def generate_launch_description():
         tf_odom_fallback,
         bridge_cmd_vel,
         bridge_odom,
-        bridge_lidar_scan,
-        bridge_lidar_points,
         *bridge_joints,
         delayed_spawn,
         delayed_pose_tf,
