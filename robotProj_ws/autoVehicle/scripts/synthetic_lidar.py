@@ -28,7 +28,7 @@ def floor_z(wx):
     if wx<RAMP_X1: return RAMP_Z0+(wx-RAMP_X0)/(RAMP_X1-RAMP_X0)*(RAMP_Z1-RAMP_Z0)
     return RAMP_Z1
 
-def raycast(ox,oy,angle):
+def raycast(ox,oy,oz,angle):
     dx=math.cos(angle); dy=math.sin(angle); best=RNG_MAX
     if abs(dy)>1e-10:
         for wy_val in (-HW,HW):
@@ -52,6 +52,18 @@ def raycast(ox,oy,angle):
             if RNG_MIN<t<best:
                 ix=ox+t*dx
                 if JUNC_L<=ix<=JUNC_R+0.01: best=t
+    # ── Ramp surface (45°) intersection ──────────────────────────
+    # Horizontal ray at height oz hits ramp when floor_z(wx) = oz.
+    # Ramp: floor_z(x) = x - RAMP_X0  for x in [RAMP_X0, RAMP_X1]
+    # Intersection at x = RAMP_X0 + oz, valid if oz in [0, RAMP_Z1]
+    if RAMP_Z0 <= oz <= RAMP_Z1:
+        rx = RAMP_X0 + oz
+        if abs(dx) > 1e-10:
+            t = (rx - ox) / dx
+            if RNG_MIN < t < best:
+                iy = oy + t * dy
+                if abs(iy) <= HW + 0.01:  # within corridor width
+                    best = t
     return float(best)
 
 class IntegratedMapper(Node):
@@ -95,7 +107,12 @@ class IntegratedMapper(Node):
         s.angle_increment=2*math.pi/360; s.range_min=RNG_MIN; s.range_max=RNG_MAX
         rng=[]; ang=s.angle_min; wpts=[]
         for _ in range(360):
-            r=raycast(lx,ly,ang)
+            # Transform ray direction from radar_link to world frame
+            dx_local=math.cos(ang); dy_local=math.sin(ang)
+            dx_world=r00*dx_local+r01*dy_local
+            dy_world=r10*dx_local+r11*dy_local
+            world_ang=math.atan2(dy_world,dx_world)
+            r=raycast(lx,ly,lz,world_ang)
             if r<RNG_MAX:
                 rng.append(r)
                 px=r*math.cos(ang); py=r*math.sin(ang); pz=0.0
