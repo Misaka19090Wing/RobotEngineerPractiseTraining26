@@ -1,0 +1,101 @@
+[INFO] [launch]: All log files can be found below /home/etertain9/.ros/log/2026-08-07-21-24-46-737520-etertain9-VMware-Virtual-Platform-45557
+[INFO] [launch]: Default logging verbosity is set to INFO
+WARNING: Package name "autoVehicle" does not follow the naming conventions. It should start with a lower case letter and only contain lower case letters, digits, underscores, and dashes.
+[INFO] [gazebo-1]: process started with pid [45576]
+[INFO] [robot_state_publisher-2]: process started with pid [45577]
+[INFO] [joint_state_publisher-3]: process started with pid [45578]
+[INFO] [static_transform_publisher-4]: process started with pid [45580]
+[INFO] [static_transform_publisher-5]: process started with pid [45581]
+[INFO] [parameter_bridge-6]: process started with pid [45582]
+[INFO] [parameter_bridge-7]: process started with pid [45583]
+[INFO] [parameter_bridge-8]: process started with pid [45584]
+[INFO] [parameter_bridge-9]: process started with pid [45585]
+[INFO] [parameter_bridge-10]: process started with pid [45586]
+[INFO] [parameter_bridge-11]: process started with pid [45587]
+[INFO] [parameter_bridge-12]: process started with pid [45588]
+[INFO] [rviz2-13]: process started with pid [45589]
+[robot_state_publisher-2] [WARN] [1786109087.070873176] [kdl_parser]: The root link base_link has an inertia specified in the URDF, but KDL does not support a root link with an inertia.  As a workaround, you can add an extra dummy link to your URDF.
+[robot_state_publisher-2] [INFO] [1786109087.070986910] [robot_state_publisher]: Robot initialized
+[static_transform_publisher-5] [INFO] [1786109087.073923995] [tf_odom_fallback]: Spinning until stopped - publishing transform
+[static_transform_publisher-5] translation: ('0.000000', '0.000000', '0.000000')
+[static_transform_publisher-5] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-5] from 'odom' to 'base_footprint'
+[static_transform_publisher-4] [INFO] [1786109087.082796576] [tf_footprint_to_base]: Spinning until stopped - publishing transform
+[static_transform_publisher-4] translation: ('0.000000', '0.000000', '0.000000')
+[static_transform_publisher-4] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-4] from 'base_footprint' to 'base_link'
+[parameter_bridge-6] [INFO] [1786109087.111930129] [b_cmd_vel]: Creating GZ->ROS Bridge: [/cmd_vel (gz.msgs.Twist) -> /cmd_vel (geometry_msgs/msg/Twist)] (Lazy 0)
+[parameter_bridge-6] [INFO] [1786109087.114177350] [b_cmd_vel]: Creating ROS->GZ Bridge: [/cmd_vel (geometry_msgs/msg/Twist) -> /cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-9] [INFO] [1786109087.122526650] [b_left_front_joint]: Creating ROS->GZ Bridge: [/model/autoVehicle/joint/left_front_joint/cmd_vel (std_msgs/msg/Float64) -> /model/autoVehicle/joint/left_front_joint/cmd_vel (gz.msgs.Double)] (Lazy 0)
+[parameter_bridge-8] [INFO] [1786109087.138484015] [b_imu]: Creating GZ->ROS Bridge: [/model/autoVehicle/link/base_link/sensor/imu/imu (gz.msgs.IMU) -> /model/autoVehicle/link/base_link/sensor/imu/imu (sensor_msgs/msg/Imu)] (Lazy 0)
+[parameter_bridge-7] [INFO] [1786109087.147736455] [b_odom]: Creating GZ->ROS Bridge: [/model/autoVehicle/odometry (gz.msgs.Odometry) -> /model/autoVehicle/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-10] [INFO] [1786109087.161981507] [b_left_rear_joint]: Creating ROS->GZ Bridge: [/model/autoVehicle/joint/left_rear_joint/cmd_vel (std_msgs/msg/Float64) -> /model/autoVehicle/joint/left_rear_joint/cmd_vel (gz.msgs.Double)] (Lazy 0)
+[parameter_bridge-12] [INFO] [1786109087.179722014] [b_right_rear_joint]: Creating ROS->GZ Bridge: [/model/autoVehicle/joint/right_rear_joint/cmd_vel (std_msgs/msg/Float64) -> /model/autoVehicle/joint/right_rear_joint/cmd_vel (gz.msgs.Double)] (Lazy 0)
+[parameter_bridge-11] [INFO] [1786109087.180496056] [b_right_front_joint]: Creating ROS->GZ Bridge: [/model/autoVehicle/joint/right_front_joint/cmd_vel (std_msgs/msg/Float64) -> /model/autoVehicle/joint/right_front_joint/cmd_vel (gz.msgs.Double)] (Lazy 0)
+[rviz2-13] [INFO] [1786109087.441931311] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-13] [INFO] [1786109087.442126629] [rviz2]: OpenGl version: 4.3 (GLSL 4.3)
+[joint_state_publisher-3] [INFO] [1786109087.462016909] [joint_state_publisher]: Waiting for robot_description to be published on the robot_description topic...
+[rviz2-13] [INFO] [1786109087.470647403] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-13] [INFO] [1786109087.533238636] [rviz2]: Subscribing to: /lidar_points
+[rviz2-13] 
+[rviz2-13] [INFO] [1786109087.536066230] [rviz2]: Subscribing to: /pointcloud_map
+[rviz2-13] 
+[joint_state_publisher-3] [INFO] [1786109087.721322154] [joint_state_publisher]: Got description, configuring robot
+[INFO] [create-14]: process started with pid [46008]
+[create-14] [INFO] [1786109090.096238171] [spawn_autoVehicle]: Requesting list of world names.
+[create-14] [INFO] [1786109090.863106763] [spawn_autoVehicle]: Waiting messages on topic [robot_description].
+[INFO] [pose_tf_broadcaster.py-15]: process started with pid [46066]
+[create-14] [INFO] [1786109091.059893833] [spawn_autoVehicle]: Entity creation successful.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/angular_velocity/x/noise[@mean="0"]:<urdf-string>:L0]: XML Attribute[mean] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/angular_velocity/x/noise[@stddev="0.001"]:<urdf-string>:L0]: XML Attribute[stddev] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/angular_velocity/y/noise[@mean="0"]:<urdf-string>:L0]: XML Attribute[mean] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/angular_velocity/y/noise[@stddev="0.001"]:<urdf-string>:L0]: XML Attribute[stddev] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/angular_velocity/z/noise[@mean="0"]:<urdf-string>:L0]: XML Attribute[mean] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/angular_velocity/z/noise[@stddev="0.001"]:<urdf-string>:L0]: XML Attribute[stddev] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/linear_acceleration/x/noise[@mean="0"]:<urdf-string>:L0]: XML Attribute[mean] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/linear_acceleration/x/noise[@stddev="0.01"]:<urdf-string>:L0]: XML Attribute[stddev] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/linear_acceleration/y/noise[@mean="0"]:<urdf-string>:L0]: XML Attribute[mean] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/linear_acceleration/y/noise[@stddev="0.01"]:<urdf-string>:L0]: XML Attribute[stddev] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/linear_acceleration/z/noise[@mean="0"]:<urdf-string>:L0]: XML Attribute[mean] in element[noise] not defined in SDF.
+[gazebo-1] Warning [Utils.cc:132] [/sdf/model[@name="autoVehicle"]/link[@name="base_link"]/sensor[@name="imu"]/imu/linear_acceleration/z/noise[@stddev="0.01"]:<urdf-string>:L0]: XML Attribute[stddev] in element[noise] not defined in SDF.
+[INFO] [create-14]: process has finished cleanly [pid 46008]
+[pose_tf_broadcaster.py-15] [INFO] [1786109091.551528960] [pose_tf_broadcaster]: PoseTFBroadcaster ready — listening on /model/autoVehicle/pose and /odom (identity fallback active until pose arrives)
+[INFO] [diff_drive_controller.py-16]: process started with pid [46083]
+[INFO] [synthetic_lidar.py-17]: process started with pid [46084]
+[diff_drive_controller.py-16] [INFO] [1786109092.471640517] [diff_drive_controller]: DiffDriveController ready
+[diff_drive_controller.py-16] [INFO] [1786109092.472166497] [diff_drive_controller]:   wheel_radius=0.015, wheel_separation=0.148
+[synthetic_lidar.py-17] [INFO] [1786109092.580604556] [synthetic_lidar]: IntegratedMapper | scan+floor+map @10Hz
+[pose_tf_broadcaster.py-15] [INFO] [1786109094.458922065] [pose_tf_broadcaster]: [ODOM RECEIVED] pos=(0.50,-0.00,0.06) — switching to live odom→base_footprint TF
+[synthetic_lidar.py-17] [INFO] [1786109095.129037359] [synthetic_lidar]: [SCAN #1] (0.06,0.02,0.03) wall_hits=226/360 floor=20 map=246
+[synthetic_lidar.py-17] [INFO] [1786109095.182874555] [synthetic_lidar]: [SCAN #2] (0.06,0.02,0.03) wall_hits=226/360 floor=20 map=492
+[synthetic_lidar.py-17] [INFO] [1786109095.283194755] [synthetic_lidar]: [SCAN #3] (0.06,0.02,0.03) wall_hits=226/360 floor=20 map=738
+[INFO] [ros2-18]: process started with pid [46182]
+[ros2-18] /cmd_vel
+[ros2-18] /lidar_points
+[ros2-18] /model/autoVehicle/joint/left_front_joint/cmd_vel
+[ros2-18] /model/autoVehicle/joint/left_rear_joint/cmd_vel
+[ros2-18] /model/autoVehicle/joint/right_front_joint/cmd_vel
+[ros2-18] /model/autoVehicle/joint/right_rear_joint/cmd_vel
+[ros2-18] /odom
+[ros2-18] /parameter_events
+[ros2-18] /pointcloud_map
+[ros2-18] /robot_description
+[ros2-18] /rosout
+[ros2-18] /tf
+[ros2-18] /tf_static
+[INFO] [ros2-18]: process has finished cleanly [pid 46182]
+[synthetic_lidar.py-17] [INFO] [1786109099.982864516] [synthetic_lidar]: [MAP] 50scans 17084pts (saved 1x) @(0.56,0.02,0.10)
+[synthetic_lidar.py-17] [INFO] [1786109104.982634271] [synthetic_lidar]: [MAP] 100scans 34584pts (saved 2x) @(0.56,0.02,0.10)
+[parameter_bridge-6] [INFO] [1786109105.655987889] [b_cmd_vel]: Passing message from ROS geometry_msgs/msg/Twist to Gazebo gz.msgs.Twist (showing msg only once per type)
+[parameter_bridge-9] [INFO] [1786109105.656656538] [b_left_front_joint]: Passing message from ROS std_msgs/msg/Float64 to Gazebo gz.msgs.Double (showing msg only once per type)
+[parameter_bridge-11] [INFO] [1786109105.656686905] [b_right_front_joint]: Passing message from ROS std_msgs/msg/Float64 to Gazebo gz.msgs.Double (showing msg only once per type)
+[parameter_bridge-12] [INFO] [1786109105.656725758] [b_right_rear_joint]: Passing message from ROS std_msgs/msg/Float64 to Gazebo gz.msgs.Double (showing msg only once per type)
+[parameter_bridge-10] [INFO] [1786109105.657160046] [b_left_rear_joint]: Passing message from ROS std_msgs/msg/Float64 to Gazebo gz.msgs.Double (showing msg only once per type)
+[synthetic_lidar.py-17] [INFO] [1786109109.982867426] [synthetic_lidar]: [MAP] 150scans 52740pts (saved 3x) @(1.43,0.01,0.11)
+[synthetic_lidar.py-17] [INFO] [1786109114.982615504] [synthetic_lidar]: [MAP] 200scans 71192pts (saved 4x) @(2.63,-0.02,0.11)
+[synthetic_lidar.py-17] [INFO] [1786109119.982483876] [synthetic_lidar]: [MAP] 250scans 89860pts (saved 5x) @(4.67,0.05,1.22)
+[synthetic_lidar.py-17] [INFO] [1786109124.983237278] [synthetic_lidar]: [MAP] 300scans 108597pts (saved 6x) @(5.01,0.02,1.21)
+[synthetic_lidar.py-17] [INFO] [1786109129.982702356] [synthetic_lidar]: [MAP] 350scans 127345pts (saved 7x) @(5.25,0.01,1.22)
+[synthetic_lidar.py-17] [INFO] [1786109134.982349162] [synthetic_lidar]: [MAP] 400scans 145826pts (saved 8x) @(5.94,-0.70,1.21)
+[synthetic_lidar.py-17] [INFO] [1786109139.982657235] [synthetic_lidar]: [MAP] 450scans 163688pts (saved 9x) @(5.94,-1.57,1.21)
+[synthetic_lidar.py-17] [INFO] [1786109144.982583496] [synthetic_lidar]: [MAP] 500scans 180888pts (saved 10x) @(5.94,-1.57,1.21)

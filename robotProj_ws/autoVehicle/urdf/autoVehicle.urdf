@@ -397,4 +397,63 @@
       <use_velocity_commands>true</use_velocity_commands>
     </plugin>
   </gazebo>
+  <!-- OdometryPublisher: publishes ground-truth odometry from Gazebo -->
+  <gazebo>
+    <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <odom_topic>/model/autoVehicle/odometry</odom_topic>
+      <dimensions>3</dimensions>
+    </plugin>
+  </gazebo>
+
+  <!-- 2D Laser scanner (CPU lidar) for point cloud mapping -->
+  <!-- 2D scans are accumulated into 3D map via robot odometry -->
+  <gazebo reference="radar_link">
+    <sensor name="lidar" type="lidar">
+      <pose>0 0 0 0 0 0</pose>
+      <topic>lidar</topic>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.05</min>
+          <max>30.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <always_on>1</always_on>
+      <visualize>true</visualize>
+    </sensor>
+  </gazebo>
+
+  <!-- IMU sensor (for robot_localization / FAST-LIO2) -->
+  <gazebo reference="base_link">
+    <sensor name="imu" type="imu">
+      <pose>0 0 0 0 0 0</pose>
+      <topic>imu</topic>
+      <update_rate>200</update_rate>
+      <always_on>1</always_on>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian" mean="0" stddev="0.001"/></x>
+          <y><noise type="gaussian" mean="0" stddev="0.001"/></y>
+          <z><noise type="gaussian" mean="0" stddev="0.001"/></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian" mean="0" stddev="0.01"/></x>
+          <y><noise type="gaussian" mean="0" stddev="0.01"/></y>
+          <z><noise type="gaussian" mean="0" stddev="0.01"/></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
 </robot>
