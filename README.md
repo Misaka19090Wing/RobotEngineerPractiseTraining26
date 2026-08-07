@@ -1,5 +1,18 @@
 # 桥架测量机器人设计方案
 
+## 项目状态
+
+- [x] **仿真环境搭建完成** — ROS2 Jazzy + Gazebo Harmonic + RViz2
+- [x] **遥控驾驶** — teleop_twist_keyboard + 四轮差速控制器
+- [x] **3D 点云建图** — synthetic_lidar.py 集成扫描+累积+保存
+- [x] **PCD 地图保存** — 自动/手动保存 ASCII PCD 文件
+- [ ] 传感器融合（IMU + 里程计）
+- [ ] SLAM / 自主导航
+
+> **详细文档**：仿真实现、架构、Bug 修复历程见 [pointCloud.md](pointCloud.md)。
+
+---
+
 ## 1. 总体概述
 
 机器人采用**四轮独立直驱差速转向**布局，整车尺寸 ≤180 mm × 180 mm × 95 mm，总重 ≤2 kg，具备原地转向能力。通过**电磁铁吸附**在金属桥架表面行驶，可通行平直段、45°斜坡及直角弯。  
@@ -43,13 +56,9 @@ $$
 ### 3.1 整体布局
 
 - 底板采用碳纤维板，外形 165 mm × 140 mm，保证轮缘不超出 180 mm 边界。
-    
 - 车轮：4 个直径 30 mm 硅胶轮胎，直接套装在无刷电机外转子。
-    
 - 上层安装控制板、激光雷达，电池和电磁铁，下层安装电机。
-    
 - 整车高度：车轮半径 15 mm + 底盘间隙 + 上层器件，总高 ≤90 mm（加装 LD06 雷达后 ≤95 mm）。
-    
 
 ### 3.2 主要器件选型与重量估算
 
@@ -99,11 +108,8 @@ $$
 ### 4.1 供电架构
 
 - **电池**：6S LiPo 22.2V（1300mAh，35C），直接为电机驱动供电。
-    
 - **系统供电**：电池经 DC-DC 降压模块（24V→5V/3A）供给树莓派、LD06；5V 再经 LDO 转为 3.3V 供 STM32 和 MPU6050。
-    
 - **保护**：输入端串联保险丝，电池使用 XT30 接口，硬件低电压报警。
-    
 
 ### 4.2 电机驱动与编码器
 
@@ -119,86 +125,120 @@ $$
 - **MPU6050 IMU**：I2C 连接 STM32，200 Hz 读取角速度和加速度，经低通滤波后发送给树莓派。
     
 - **摄像头**：树莓派 CSI 接口广角摄像头，用于遥控场景视野。
-    
 - **STM32–树莓派**：USB 虚拟串口，200 Hz 频率交换电机状态与控制指令。
-    
 
 ---
 
-## 5. 软件系统（ROS2）
+## 5. 软件系统（ROS2 仿真实现）
 
-### 5.1 节点架构
+### 5.1 当前已实现节点
 
-- **`motor_control`**：接收 `/cmd_vel`，解算为四轮目标转速并发送给 STM32。
-    
-- **`wheel_odom`**：根据四轮编码器累加位移，发布轮式里程计 `/odom`。
-    
-- **`ld06_driver`**：发布 `/scan`（10Hz）。
-    
-- **`laser_odom`**：运行 `rf2o_laser_odometry` 包，基于 `/scan` 进行点云匹配，发布激光里程计。
-    
-- **`ekf_localization`**：使用 `robot_localization` 的 EKF 节点，融合 `/odom`、`/laser_odom` 和 `/imu`，输出高精度融合里程计 `/odometry/filtered`。
-    
-- **`slam`**：采用 `cartographer`，订阅 `/scan` 和 `/imu`，构建 2D 占据栅格地图。
-    
-- **`navigation2`**：全局规划器（Smac Planner）+ 局部控制器（TEB/DWB），接收航点进行自主导航。
-    
-- **`waypoint_manager`**：监听 Rviz 的 `/clicked_point`，顺序定义起点、转弯点、终点，并驱动导航栈执行。
-    
-- **`rviz_display`**：实时显示点云、地图、路径及累计巡航距离。
-    
+| 节点 | 可执行文件 | 功能 |
+|---|---|---|
+| **diff_drive_controller** | `diff_drive_controller.py` | 订阅 `/cmd_vel`，计算四轮转速，通过 `ros_gz_bridge` 驱动 Gazebo 关节 |
+| **pose_tf_broadcaster** | `pose_tf_broadcaster.py` | 订阅 `/odom`，发布动态 `odom→base_footprint` TF |
+| **synthetic_lidar** ★ | `synthetic_lidar.py` | **集成 LiDAR 扫描 + 点云累积 + 地图发布 + PCD 保存** |
+| `robot_state_publisher` | ROS2 标准 | 从 URDF 发布 `base_link→child_links` TF |
+| `joint_state_publisher` | ROS2 标准 | 发布零位关节状态，驱动轮子 TF |
+| `ros_gz_bridge` ×8 | ROS2 标准 | cmd_vel、odometry、IMU、关节速度 桥接 |
 
-### 5.2 里程精度保障
+> ★ `synthetic_lidar.py` 是整个点云建图系统的唯一核心节点。详见架构图和 [pointCloud.md](pointCloud.md)。
 
-- 轮式里程计：编码器直接测量轮旋转，通过运动学模型推算位移，高频输出但易受打滑影响。
-    
-- 激光里程计：10 Hz 点云配准，不受轮子打滑影响，可修正长距离漂移。
-    
-- EKF 融合：结合 IMU 角速度与加速度，估计机器人的三维位姿，抑制噪声，确保 10 m 测量距离内误差 ≤0.1 m。
-    
+### 5.2 数据流架构
 
-### 5.3 遥控与自主巡航
+```
+teleop → /cmd_vel → diff_drive_controller → ros_gz_bridge → Gazebo joints → 底盘运动
+                                                                       ↓
+                                                               OdometryPublisher
+                                                                       ↓
+                                                     ros_gz_bridge → /odom
+                                                                       ↓
+                                                           pose_tf_broadcaster
+                                                                       ↓
+                                                               odom TF 树
+                                                                       ↓
+synthetic_lidar.py ← TF(radar_link→odom) ← robot_state_publisher ← URDF
+       │
+       ├── /scan            (10Hz) → RViz2 Live LiDAR
+       ├── /lidar_points     (10Hz) → RViz2 Live 3D Points
+       ├── /pointcloud_map  (2Hz)  → RViz2 PointCloud Map
+       └── /save_map        (手动)  → ~/pointcloud_maps/*.pcd
+```
 
-- **遥控模式**：通过手柄或键盘发布 `/cmd_vel`，直接控制底盘移动。
-    
-- **自主模式**：在 Rviz 中手动点击航点（起点→转弯点→终点），导航栈自动规划路径并执行，运动过程中实时计算并显示第一段和第二段距离，精度 ≤1%。
-    
+完整 TF 树：
+```
+odom → base_footprint → base_link → (left_front_wheel, right_rear_wheel, radar_link, ...)
+```
+
+### 5.3 仿真环境
+
+- **ROS2**: Jazzy
+- **Gazebo**: Harmonic (gz-sim 8.11)
+- **物理引擎**: DART
+- **控制**: teleop_twist_keyboard
+- **车型**: 四轮差速转向（左前/左后同步，右前/右后同步）
+- **赛道**: `course_test.sdf`（平直段→45°斜坡→干扰段→T字路口）
+
+### 5.4 URDF 传感器
+
+- **激光雷达**：CPU `lidar`（ray 类型），360 射线，10Hz，安装于 `radar_link`
+- **IMU**：`imu` 类型，200Hz，安装于 `base_link`
+- **里程计**：`OdometryPublisher` 系统插件，发布地面真实位姿
 
 ---
 
 ## 6. 模拟桥架环境与测试
 
-### 6.1 测试环境特征
+### 6.1 赛道几何
 
-- 路径组成：平直段 → 45° 上坡 → 干扰段（地面凸起）→ 直角转弯 → 终点航点。
-    
-- 理论分段距离：第一段约 20 m，第二段约 1 m。
-    
+| 区域 | X 范围 (m) | Z 范围 (m) | 墙壁 |
+|---|---|---|---|
+| 平直段 | [0, 3.2] | 0 | Y = ±0.15 |
+| 45° 斜坡 | [3.2, 4.33] | 0 → 1.13 | Y = ±0.15 |
+| 干扰段 | [4.33, 5.78] | 1.13 | Y = ±0.15，地面含凸起 |
+| T 字路口 | ~5.93 | 1.13 | Y 向展开 ±1.6m |
 
-### 6.2 测试步骤
+### 6.2 启动方式
 
-1. **遥控建图**：遥控机器人遍历全路径，开启 Cartographer 建立完整地图并保存。
-    
-2. **吸附与通过性验证**：确保机器人在斜坡和转弯处未发生滑落。
-    
-3. **航点自主导航**：在地图上标定起点、转弯点和终点，启动自主导航。记录实际走行的第一段、第二段距离。
-    
-4. **精度分析**：对比测量距离与理论值，验证误差 ≤0.1 m。
-    
+```bash
+cd robotProj_ws && source install/setup.bash
+ros2 launch autoVehicle gazebo.launch.py
+```
+
+遥控（另一终端）：
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+保存地图：
+```bash
+ros2 service call /save_map std_srvs/srv/Trigger
+# 文件：~/pointcloud_maps/map_YYYYMMDD_HHMMSS.pcd
+```
+
+### 6.3 测试结果
+
+- 扫描速率：10Hz（360 射线 + 环形地面扫描）
+- 单帧点数：~400-500（含墙壁垂直填充 + 地面点阵）
+- 累积速率：~4,000-5,000 点/秒
+- 自动保存：每 ~50 帧触发一次
+- 机器人成功遥控通过平直段→斜坡→干扰段→T字路口
+- 点云实时显示墙壁表面（3D）、地面高程（含坡面）、走廊轮廓
 
 ---
 
 ## 7. 关键技术指标满足情况
 
-- **尺寸**：170×170×~90 mm，≤180×180×95 mm。
-    
-- **重量**：约 1.26 kg，≤2 kg。
-    
-- **爬坡能力**：电磁铁吸附安全余量充足，45° 斜坡可靠通过。
-    
-- **里程精度**：多传感器融合里程计，10 m 误差 ≤0.1 m。
-    
-- **感知与导航**：LD06 10Hz 激光建图，Nav2 航点自主导航，实时点云与距离显示。
-    
+- **尺寸**：170×170×~90 mm，≤180×180×95 mm ✓
+- **重量**：约 1.26 kg，≤2 kg ✓
+- **爬坡能力**：电磁铁吸附安全余量充足，45° 斜坡可靠通过 ✓
+- **遥控建图**：仿真环境已实现 3D 点云建图与 PCD 保存 ✓
+- **里程精度**：仿真使用地面真实里程计，无漂移
+- **感知与导航**：仿真 LiDAR 10Hz，Nav2 待集成
 
-该方案充分考虑了紧凑性、轻量化和工程可行性，满足桥架测量机器人的全部功能与性能要求。
+---
+
+## 8. 相关文档
+
+- [pointCloud.md](pointCloud.md) — 点云建图详细文档（架构、核心组件、赛道模型、Bug 修复历程）
+- [testlog.md](testlog.md) — Gazebo 仿真测试日志（摩擦调试、控制器选择等历史记录）
