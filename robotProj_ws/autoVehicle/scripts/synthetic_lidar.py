@@ -18,8 +18,8 @@ from std_msgs.msg import Header
 from std_srvs.srv import Trigger
 from tf2_ros import Buffer, TransformListener, TransformException
 
-HW=0.15; RAMP_X0=3.2; RAMP_X1=4.3314; RAMP_Z0=0.0; RAMP_Z1=1.1314
-CORR_END=5.78; JUNC_X=5.9314; JUNC_L=5.78; JUNC_R=6.08
+HW=0.15; RAMP_X0=20.0; RAMP_X1=21.1314; RAMP_Z0=0.0; RAMP_Z1=1.1314
+CORR_END=22.58; JUNC_X=22.7314; JUNC_L=22.58; JUNC_R=22.88
 JUNC_GAP=0.2; JUNC_MAX_Y=1.6; JUNC_END_Y=1.65
 RNG_MIN=0.05; RNG_MAX=30.0
 

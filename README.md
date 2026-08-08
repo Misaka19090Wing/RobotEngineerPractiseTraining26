@@ -213,10 +213,10 @@ odom → base_footprint → base_link → (left_front_wheel, right_rear_wheel, r
 
 | 区域 | X 范围 (m) | Z 范围 (m) | 墙壁 |
 |---|---|---|---|
-| 平直段 | [0, 3.2] | 0 | Y = ±0.15 |
-| 45° 斜坡 | [3.2, 4.33] | 0 → 1.13 | Y = ±0.15 |
-| 干扰段 | [4.33, 5.78] | 1.13 | Y = ±0.15，地面含凸起 |
-| T 字路口 | ~5.93 | 1.13 | Y 向展开 ±1.6m |
+| 平直段 | [0, 20] | 0 | Y = ±0.15 |
+| 45° 斜坡 | [20, 21.13] | 0 → 1.13 | Y = ±0.15 |
+| 干扰段 | [21.13, 22.58] | 1.13 | Y = ±0.15，地面含凸起 |
+| T 字路口 | ~22.73 | 1.13 | Y 向展开 ±1.6m |
 
 ### 6.2 启动方式
 
@@ -241,6 +241,16 @@ ros2 run autoVehicle generate_course_map.py
 坡道处理：`synthetic_lidar.py` 不再把 45° 坡面作为 `/scan` 的 2D 障碍；全局代价地图
 只使用静态 `course_map`，动态避障交给局部代价地图，避免上坡入口被实时扫描误判为墙。
 
+注意：赛道改为 20m 后，旧的 PCD 地图只覆盖旧赛道范围。使用自定义航点前需要重新建图：
+
+```bash
+# 重启 Gazebo 后，遥控或通过 waypoint_cli 沿新赛道走完整条路
+ros2 service call /save_map std_srvs/srv/Trigger
+ros2 service call /waypoint/reload_map std_srvs/srv/Trigger
+```
+
+Nav2 使用 `course_map`，不受旧 PCD 影响。
+
 遥控（另一终端）：
 ```bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
@@ -264,7 +274,7 @@ ros2 service call /waypoint/start std_srvs/srv/Trigger
 
 ```bash
 ros2 run autoVehicle waypoint_cli.py add 3.0 0.0 --yaw 0
-ros2 run autoVehicle waypoint_cli.py add 5.94 1.2 --yaw 90
+ros2 run autoVehicle waypoint_cli.py add 22.73 1.2 --yaw 90
 ros2 run autoVehicle waypoint_cli.py start
 ros2 run autoVehicle waypoint_cli.py stop
 ros2 run autoVehicle waypoint_cli.py status

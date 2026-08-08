@@ -17,12 +17,12 @@ import os
 RES = 0.02
 ORIGIN_X = -0.5
 ORIGIN_Y = -2.0
-MAX_X = 6.3
+MAX_X = 23.2
 MAX_Y = 1.7
 
-CORR_END = 5.78
-JUNC_L = 5.68
-JUNC_R = 6.18
+CORR_END = 22.58
+JUNC_L = 22.48
+JUNC_R = 22.98
 JUNC_Y = 1.60
 
 

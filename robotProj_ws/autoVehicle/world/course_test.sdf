@@ -29,55 +29,55 @@
     </model>
 
     <!-- ============================================================ -->
-    <!-- COURSE: 3200mm flat -> 1600mm 45deg uphill -> 1600mm disturbance -> T-junction -->
+    <!-- COURSE: 20000mm flat -> 1600mm 45deg uphill -> 1600mm disturbance -> T-junction -->
     <!-- Path width: 0.3m   Wall height: 0.2m   Wall thickness: 0.1m   Floor thickness: 0.05m -->
     <!-- ============================================================ -->
 
     <model name="test_course">
       <static>true</static>
 
-      <!-- ===== SEGMENT 1: flat straight, X = 0 -> 3.2, Z = 0 ===== -->
+      <!-- ===== SEGMENT 1: flat straight, X = 0 -> 20, Z = 0 ===== -->
       <link name="seg1_floor">
-        <pose>1.6 0 0.025 0 0 0</pose>
+        <pose>10.0 0 0.025 0 0 0</pose>
         <collision name="collision">
-          <geometry><box><size>3.2 0.3 0.05</size></box></geometry>
+          <geometry><box><size>20.0 0.3 0.05</size></box></geometry>
           <surface>
             <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
           </surface>
         </collision>
         <visual name="visual">
-          <geometry><box><size>3.2 0.3 0.05</size></box></geometry>
+          <geometry><box><size>20.0 0.3 0.05</size></box></geometry>
           <material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
         </visual>
       </link>
 
       <link name="seg1_wall_left">
-        <pose>1.6 -0.2 0.1 0 0 0</pose>
+        <pose>10.0 -0.2 0.1 0 0 0</pose>
         <collision name="collision">
-          <geometry><box><size>3.2 0.1 0.2</size></box></geometry>
+          <geometry><box><size>20.0 0.1 0.2</size></box></geometry>
         </collision>
         <visual name="visual">
-          <geometry><box><size>3.2 0.1 0.2</size></box></geometry>
+          <geometry><box><size>20.0 0.1 0.2</size></box></geometry>
           <material><ambient>0.75 0.75 0.75 1</ambient><diffuse>0.75 0.75 0.75 1</diffuse></material>
         </visual>
       </link>
 
       <link name="seg1_wall_right">
-        <pose>1.6 0.2 0.1 0 0 0</pose>
+        <pose>10.0 0.2 0.1 0 0 0</pose>
         <collision name="collision">
-          <geometry><box><size>3.2 0.1 0.2</size></box></geometry>
+          <geometry><box><size>20.0 0.1 0.2</size></box></geometry>
         </collision>
         <visual name="visual">
-          <geometry><box><size>3.2 0.1 0.2</size></box></geometry>
+          <geometry><box><size>20.0 0.1 0.2</size></box></geometry>
           <material><ambient>0.75 0.75 0.75 1</ambient><diffuse>0.75 0.75 0.75 1</diffuse></material>
         </visual>
       </link>
 
       <!-- ===== SEGMENT 2: 45deg uphill ramp, length 1.6m along slope ===== -->
       <!-- delta_X = delta_Z = 1.6 * cos45 = 1.1314 -->
-      <!-- start (3.2,0,0), end (4.3314,0,1.1314), centre (3.7657,0,0.5657) -->
+      <!-- start (20,0,0), end (21.1314,0,1.1314), centre (20.5657,0,0.5657) -->
       <link name="seg2_floor">
-        <pose>3.7657 0 0.5657 0 -0.7854 0</pose>
+        <pose>20.5657 0 0.5657 0 -0.7854 0</pose>
         <collision name="collision">
           <geometry><box><size>1.6 0.3 0.05</size></box></geometry>
           <surface>
@@ -91,7 +91,7 @@
       </link>
 
       <link name="seg2_wall_left">
-        <pose>3.7657 -0.2 0.5657 0 -0.7854 0</pose>
+        <pose>20.5657 -0.2 0.5657 0 -0.7854 0</pose>
         <collision name="collision">
           <geometry><box><size>1.6 0.1 0.2</size></box></geometry>
         </collision>
@@ -102,7 +102,7 @@
       </link>
 
       <link name="seg2_wall_right">
-        <pose>3.7657 0.2 0.5657 0 -0.7854 0</pose>
+        <pose>20.5657 0.2 0.5657 0 -0.7854 0</pose>
         <collision name="collision">
           <geometry><box><size>1.6 0.1 0.2</size></box></geometry>
         </collision>
@@ -112,9 +112,9 @@
         </visual>
       </link>
 
-      <!-- ===== SEGMENT 3: disturbance (ground bumps), X = 4.3314 -> 5.7814, Z = 1.1314 ===== -->
+      <!-- ===== SEGMENT 3: disturbance (ground bumps), X = 21.1314 -> 22.5814, Z = 1.1314 ===== -->
       <link name="seg3_floor">
-        <pose>5.0564 0 1.1241 0 0 0</pose>
+        <pose>21.8564 0 1.1241 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>1.45 0.3 0.05</size></box></geometry>
           <surface>
@@ -128,7 +128,7 @@
       </link>
 
       <link name="seg3_wall_left">
-        <pose>5.0564 -0.2 1.1991 0 0 0</pose>
+        <pose>21.8564 -0.2 1.1991 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>1.45 0.1 0.2</size></box></geometry>
         </collision>
@@ -139,7 +139,7 @@
       </link>
 
       <link name="seg3_wall_right">
-        <pose>5.0564 0.2 1.1991 0 0 0</pose>
+        <pose>21.8564 0.2 1.1991 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>1.45 0.1 0.2</size></box></geometry>
         </collision>
@@ -151,7 +151,7 @@
 
       <!-- disturbance bumps on seg3 floor surface (Z_top = 1.1314) -->
       <link name="seg3_bump_01">
-        <pose>4.48 0.04 1.1541 0 0 0.0</pose>
+        <pose>21.28 0.04 1.1541 0 0 0.0</pose>
         <collision name="collision">
           <geometry><box><size>0.06 0.16 0.010</size></box></geometry>
           <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
@@ -163,7 +163,7 @@
       </link>
 
       <link name="seg3_bump_02">
-        <pose>4.68 -0.06 1.1531 0 0 0.2</pose>
+        <pose>21.48 -0.06 1.1531 0 0 0.2</pose>
         <collision name="collision">
           <geometry><box><size>0.05 0.14 0.008</size></box></geometry>
           <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
@@ -175,7 +175,7 @@
       </link>
 
       <link name="seg3_bump_03">
-        <pose>4.88 0.02 1.1541 0 0 0.1</pose>
+        <pose>21.68 0.02 1.1541 0 0 0.1</pose>
         <collision name="collision">
           <geometry><box><size>0.07 0.18 0.010</size></box></geometry>
           <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
@@ -187,7 +187,7 @@
       </link>
 
       <link name="seg3_bump_04">
-        <pose>5.10 -0.03 1.1536 0 0 -0.15</pose>
+        <pose>21.90 -0.03 1.1536 0 0 -0.15</pose>
         <collision name="collision">
           <geometry><box><size>0.05 0.12 0.009</size></box></geometry>
           <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
@@ -199,7 +199,7 @@
       </link>
 
       <link name="seg3_bump_05">
-        <pose>5.32 0.07 1.1541 0 0 0.3</pose>
+        <pose>22.12 0.07 1.1541 0 0 0.3</pose>
         <collision name="collision">
           <geometry><box><size>0.06 0.15 0.010</size></box></geometry>
           <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
@@ -211,7 +211,7 @@
       </link>
 
       <link name="seg3_bump_06">
-        <pose>5.56 -0.05 1.1526 0 0 -0.25</pose>
+        <pose>22.36 -0.05 1.1526 0 0 -0.25</pose>
         <collision name="collision">
           <geometry><box><size>0.05 0.13 0.007</size></box></geometry>
           <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
@@ -222,11 +222,11 @@
         </visual>
       </link>
 
-      <!-- ===== SEGMENT 4: T-junction, approach joins at X = 5.9314, cross path spans Y = -1.6 -> 1.6 ===== -->
+      <!-- ===== SEGMENT 4: T-junction, approach joins at X = 22.7314, cross path spans Y = -1.6 -> 1.6 ===== -->
 
       <!-- junction floor: 0.5m wide in X, 3.2m long in Y, at Z = 1.1314 -->
       <link name="junction_floor">
-        <pose>5.9314 0 1.1241 0 0 0</pose>
+        <pose>22.7314 0 1.1241 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>0.5 3.2 0.05</size></box></geometry>
           <surface>
@@ -240,9 +240,9 @@
       </link>
 
       <!-- junction left wall, north half (gap at Y ~ 0 for approach arm) -->
-      <!-- left wall X = 5.9314 - 0.25 - 0.05 = 5.6814 -->
+      <!-- left wall X = 22.7314 - 0.25 - 0.05 = 22.4814 -->
       <link name="junction_wall_left_north">
-        <pose>5.6814 0.9 1.1991 0 0 0</pose>
+        <pose>22.4814 0.9 1.1991 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>0.1 1.4 0.2</size></box></geometry>
         </collision>
@@ -254,7 +254,7 @@
 
       <!-- junction left wall, south half -->
       <link name="junction_wall_left_south">
-        <pose>5.6814 -0.9 1.1991 0 0 0</pose>
+        <pose>22.4814 -0.9 1.1991 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>0.1 1.4 0.2</size></box></geometry>
         </collision>
@@ -264,9 +264,9 @@
         </visual>
       </link>
 
-      <!-- junction right wall (full length), X = 5.9314 + 0.25 + 0.05 = 6.1814 -->
+      <!-- junction right wall (full length), X = 22.7314 + 0.25 + 0.05 = 22.9814 -->
       <link name="junction_wall_right">
-        <pose>6.1814 0 1.1991 0 0 0</pose>
+        <pose>22.9814 0 1.1991 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>0.1 3.2 0.2</size></box></geometry>
         </collision>
@@ -278,7 +278,7 @@
 
       <!-- junction end cap walls at Y = +/-1.6 -->
       <link name="junction_wall_end_pos_y">
-        <pose>5.9314 1.65 1.1991 0 0 0</pose>
+        <pose>22.7314 1.65 1.1991 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>0.5 0.1 0.2</size></box></geometry>
         </collision>
@@ -289,7 +289,7 @@
       </link>
 
       <link name="junction_wall_end_neg_y">
-        <pose>5.9314 -1.65 1.1991 0 0 0</pose>
+        <pose>22.7314 -1.65 1.1991 0 0 0</pose>
         <collision name="collision">
           <geometry><box><size>0.5 0.1 0.2</size></box></geometry>
         </collision>

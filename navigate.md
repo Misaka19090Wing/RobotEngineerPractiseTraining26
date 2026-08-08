@@ -39,7 +39,7 @@ RViz 中会显示 PCD 地图，使用 **2D Goal Pose** 在地图上依次点选�
 
 ```bash
 ros2 run autoVehicle waypoint_cli.py add 3.0 0.0 --yaw 0
-ros2 run autoVehicle waypoint_cli.py add 5.94 1.2 --yaw 90
+ros2 run autoVehicle waypoint_cli.py add 22.73 1.2 --yaw 90
 ros2 run autoVehicle waypoint_cli.py start
 ```
 
@@ -99,7 +99,7 @@ ros2 run autoVehicle generate_course_map.py
 正常日志应显示：
 
 ```text
-StaticLayer: Resizing costmap to 341 X 186 at 0.020000 m/pix
+StaticLayer: Resizing costmap to 1186 X 186 at 0.020000 m/pix
 ```
 
 ### 4.2 窄走廊内 DWB 找不到合法轨迹
@@ -131,8 +131,8 @@ BaseObstacle.scale: 0.02
 现象：
 
 ```text
-Begin navigating from current location (2.90, 0.00) to (4.41, 0.02)
-GridBased plugin failed to plan from (2.90, 0.00) to (4.41, 0.02)
+Begin navigating from current location (19.90, 0.00) to (21.41, 0.02)
+GridBased plugin failed to plan from (19.90, 0.00) to (21.41, 0.02)
 ```
 
 原因：
@@ -161,8 +161,8 @@ global_costmap:
 验证结果：
 
 ```text
-raycast(x=2.9, 坡面启用):  0.41 m
-raycast(x=2.9, 坡面禁用):  3.18 m
+raycast(x=19.9, 坡面启用):  0.21 m
+raycast(x=19.9, 坡面禁用):  2.98 m
 侧墙检测:                  0.15 m
 ```
 
@@ -171,8 +171,8 @@ raycast(x=2.9, 坡面禁用):  3.18 m
 - `colcon build --symlink-install --packages-select autoVehicle` 通过。
 - PCD 加载正常：`map_20260807_232605.pcd` 可加载并发布为 `/waypoint_map`。
 - 自定义航点：完整 Gazebo 中通过服务添加航点后，机器人从 `x=0.50` 移动到 `x≈1.00`，`/cmd_vel` 正常输出。
-- Nav2 规划：`ComputePathToPose` 从 `(0.5,0)` 到 `(3.1,0)` 成功返回路径。
-- 上坡规划：模拟坡上位置 `(3.3,0.05)` 到 `(4.41,0)`，路径规划成功。
+- Nav2 规划：`ComputePathToPose` 从 `(0.5,0)` 到 `(10.0,0)` 成功返回路径。
+- 上坡规划：模拟坡前位置 `(19.9,0.05)` 到 `(21.41,0)`，路径规划成功。
 - 窄走廊控制：`navigate_to_pose` 可持续输出 `Passing new path to controller`，无 `No valid trajectories`。
 
 ## 6. 建议
@@ -181,3 +181,13 @@ raycast(x=2.9, 坡面禁用):  3.18 m
 - 如果机器人测试后停在坡上，重启 Gazebo 会回到起点 `(0.5, 0)`。
 - 旧 PGM 文件仍保留，但 Nav2 默认不再使用。
 - 后续如需真实环境导航，可将 `course_map` 替换为真实 SLAM 栅格地图，并保持 `nav2_params.yaml` 的窄走廊参数。
+- 赛道改为 20m 后，旧 PCD 只覆盖旧赛道范围；使用自定义航点前需要重新建图：
+
+```bash
+ros2 launch autoVehicle gazebo.launch.py
+# 另一个终端：遥控或通过 waypoint_cli 沿新赛道走完整条路
+ros2 service call /save_map std_srvs/srv/Trigger
+ros2 service call /waypoint/reload_map std_srvs/srv/Trigger
+```
+
+Nav2 的 `course_map` 已按新赛道几何重新生成，不需要依赖 PCD。
