@@ -197,3 +197,47 @@ ros2 service call /save_map std_srvs/srv/Trigger
 9. **斜坡面穿透**：raycast 只检测垂直墙壁 → 新增 45° 坡面交点检测
 10. **坐标系未变换**：射线角度在 radar_link 帧传入 raycast 但函数假设世界帧 → 加入旋转矩阵变换
 11. **墙面线状显示**：2D LiDAR 只有一层 → 垂直线填充（地/中/顶）
+
+## 9. 航点自主导航（基于已保存 PCD）
+
+新增 `waypoint_navigator.py`，把建好的 PCD 地图直接作为航点巡航的上下文：
+
+1. 节点自动加载 `~/pointcloud_maps` 中最新的 `.pcd`（也可用 `map_file` 参数指定），发布为 `/waypoint_map`，供 RViz 显示。
+2. 使用 RViz 的 **2D Goal Pose** 工具点选航点，节点收到 `/goal_pose` 后加入队列；命令行通过 `/waypoint/add` 服务添加航点。
+3. `waypoint/start` 启动后，节点订阅 TF/`/odom` 获取位姿，按差速模型输出 `/cmd_vel`，并用 `/scan` 做前方障碍减速/停止与左右避让。
+
+命令行示例：
+
+```bash
+ros2 run autoVehicle waypoint_cli.py add 3.0 0.0 --yaw 0
+ros2 run autoVehicle waypoint_cli.py add 5.94 1.2 --yaw 90
+ros2 run autoVehicle waypoint_cli.py start
+```
+
+相关接口：
+
+- `/waypoint_map`、`/waypoint_markers`、`/waypoint_path`
+- `/waypoint/add`、`/waypoint/start`、`/waypoint/stop`、`/waypoint/clear`
+- `/waypoint/save`、`/waypoint/load`、`/waypoint/status`
+- `/waypoint/reload_map` — 保存新 PCD 后无需重启，直接刷新地图
+
+如果使用 Nav2 预建图导航，可在 Gazebo 启动后运行：
+
+```bash
+ros2 launch autoVehicle nav_map.launch.py
+```
+
+该启动文件已包含 `map_server`、Nav2 核心节点（不含 `collision_monitor`）和 `map→odom`
+静态 TF，默认地图为 `maps/course_map.yaml`。
+
+> 旧版 `map_20260807_232605.pgm` 曾把走廊中心整条标记为 occupied，导致 Nav2 始终
+> “Failed to create plan”。现已新增 `generate_course_map.py`，按赛道几何生成干净的
+> `course_map.pgm/yaml`，可执行 `ros2 run autoVehicle generate_course_map.py` 重新生成。
+
+`nav2_params.yaml` 也已针对 0.3 m 窄走廊调整：`robot_radius=0.08`、
+`inflation_radius=0.12`、DWB `BaseObstacle.scale=0.02`，避免控制器在两侧墙壁之间
+找不到合法轨迹。
+
+上坡导航：`synthetic_lidar.py` 的 `/scan` 不再包含 45° 坡面交点，坡面仍通过地面点阵
+进入 3D 点云；Nav2 全局代价地图只使用静态 `course_map`，实时 `/scan` 仅用于局部避障，
+避免坡道入口被误判为障碍导致 `Goal failed`。

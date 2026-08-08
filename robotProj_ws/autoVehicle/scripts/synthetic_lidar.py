@@ -28,7 +28,7 @@ def floor_z(wx):
     if wx<RAMP_X1: return RAMP_Z0+(wx-RAMP_X0)/(RAMP_X1-RAMP_X0)*(RAMP_Z1-RAMP_Z0)
     return RAMP_Z1
 
-def raycast(ox,oy,oz,angle):
+def raycast(ox,oy,oz,angle,include_ramp=True):
     dx=math.cos(angle); dy=math.sin(angle); best=RNG_MAX
     if abs(dy)>1e-10:
         for wy_val in (-HW,HW):
@@ -56,7 +56,7 @@ def raycast(ox,oy,oz,angle):
     # Horizontal ray at height oz hits ramp when floor_z(wx) = oz.
     # Ramp: floor_z(x) = x - RAMP_X0  for x in [RAMP_X0, RAMP_X1]
     # Intersection at x = RAMP_X0 + oz, valid if oz in [0, RAMP_Z1]
-    if RAMP_Z0 <= oz <= RAMP_Z1:
+    if include_ramp and RAMP_Z0 <= oz <= RAMP_Z1:
         rx = RAMP_X0 + oz
         if abs(dx) > 1e-10:
             t = (rx - ox) / dx
@@ -112,7 +112,7 @@ class IntegratedMapper(Node):
             dx_world=r00*dx_local+r01*dy_local
             dy_world=r10*dx_local+r11*dy_local
             world_ang=math.atan2(dy_world,dx_world)
-            r=raycast(lx,ly,lz,world_ang)
+            r=raycast(lx,ly,lz,world_ang,include_ramp=False)
             if r<RNG_MAX:
                 rng.append(r)
                 px=r*math.cos(ang); py=r*math.sin(ang); pz=0.0
