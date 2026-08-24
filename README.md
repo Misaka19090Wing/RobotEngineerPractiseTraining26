@@ -6,10 +6,12 @@
 - [x] **遥控驾驶** — teleop_twist_keyboard + 四轮差速控制器
 - [x] **3D 点云建图** — synthetic_lidar.py 集成扫描+累积+保存
 - [x] **PCD 地图保存** — 自动/手动保存 ASCII PCD 文件
+- [x] **航点自主导航** — 基于已保存 PCD 地图手动设立航点
+- [x] **Nav2 预建图导航** — `nav_map.launch.py` 可选启动
 - [ ] 传感器融合（IMU + 里程计）
-- [ ] SLAM / 自主导航
+- [ ] SLAM / 完整导航栈
 
-> **详细文档**：仿真实现、架构、Bug 修复历程见 [pointCloud.md](pointCloud.md)。
+> **详细文档**：仿真实现与建图见 [pointCloud.md](pointCloud.md)，导航与排障见 [navigate.md](navigate.md)。
 
 ---
 
@@ -138,6 +140,9 @@ $$
 | **diff_drive_controller** | `diff_drive_controller.py` | 订阅 `/cmd_vel`，计算四轮转速，通过 `ros_gz_bridge` 驱动 Gazebo 关节 |
 | **pose_tf_broadcaster** | `pose_tf_broadcaster.py` | 订阅 `/odom`，发布动态 `odom→base_footprint` TF |
 | **synthetic_lidar** ★ | `synthetic_lidar.py` | **集成 LiDAR 扫描 + 点云累积 + 地图发布 + PCD 保存** |
+| **waypoint_navigator** ★ | `waypoint_navigator.py` | **加载 PCD 地图、手动航点队列、差速巡航 + 激光避障** |
+| `waypoint_cli` | `waypoint_cli.py` | 命令行添加/启停/保存航点 |
+| `generate_course_map` | `generate_course_map.py` | 按赛道几何生成 Nav2 使用的 `course_map.pgm/yaml` |
 | `robot_state_publisher` | ROS2 标准 | 从 URDF 发布 `base_link→child_links` TF |
 | `joint_state_publisher` | ROS2 标准 | 发布零位关节状态，驱动轮子 TF |
 | `ros_gz_bridge` ×8 | ROS2 标准 | cmd_vel、odometry、IMU、关节速度 桥接 |
@@ -163,6 +168,21 @@ synthetic_lidar.py ← TF(radar_link→odom) ← robot_state_publisher ← URDF
        ├── /lidar_points     (10Hz) → RViz2 Live 3D Points
        ├── /pointcloud_map  (2Hz)  → RViz2 PointCloud Map
        └── /save_map        (手动)  → ~/pointcloud_maps/*.pcd
+
+waypoint_navigator.py ← PCD(~/pointcloud_maps/*.pcd) + /odom or TF + /scan
+       │
+       ├── /waypoint_map     → RViz2 PCD Map
+       ├── /waypoint_markers → RViz2 航点队列
+       ├── /waypoint_path    → RViz2 剩余路径
+       ├── /goal_pose        ← RViz2 2D Goal Pose
+       └── /cmd_vel          → diff_drive_controller → Gazebo
+
+nav_map.launch.py ← course_map + /scan + TF
+       │
+       ├── map_server       → /map → global_costmap
+       ├── planner_server   → 路径规划
+       ├── controller_server → /cmd_vel → diff_drive_controller
+       └── /goal_pose       ← RViz2 2D Goal Pose
 ```
 
 完整 TF 树：
@@ -193,10 +213,10 @@ odom → base_footprint → base_link → (left_front_wheel, right_rear_wheel, r
 
 | 区域 | X 范围 (m) | Z 范围 (m) | 墙壁 |
 |---|---|---|---|
-| 平直段 | [0, 3.2] | 0 | Y = ±0.15 |
-| 45° 斜坡 | [3.2, 4.33] | 0 → 1.13 | Y = ±0.15 |
-| 干扰段 | [4.33, 5.78] | 1.13 | Y = ±0.15，地面含凸起 |
-| T 字路口 | ~5.93 | 1.13 | Y 向展开 ±1.6m |
+| 平直段 | [0, 20] | 0 | Y = ±0.15 |
+| 45° 斜坡 | [20, 21.13] | 0 → 1.13 | Y = ±0.15 |
+| 干扰段 | [21.13, 22.58] | 1.13 | Y = ±0.15，地面含凸起 |
+| T 字路口 | ~22.73 | 1.13 | Y 向展开 ±1.6m |
 
 ### 6.2 启动方式
 
@@ -204,6 +224,32 @@ odom → base_footprint → base_link → (left_front_wheel, right_rear_wheel, r
 cd robotProj_ws && source install/setup.bash
 ros2 launch autoVehicle gazebo.launch.py
 ```
+
+可选：基于已保存 PGM/YAML 地图启动 Nav2（需要先运行上面的 Gazebo 仿真）：
+```bash
+ros2 launch autoVehicle nav_map.launch.py
+```
+
+Nav2 默认使用 `maps/course_map.yaml`。若需要重新生成这张干净栅格图：
+```bash
+ros2 run autoVehicle generate_course_map.py
+```
+
+`nav2_params.yaml` 已按窄走廊调整 DWB 与代价地图参数，减少 `No valid trajectories`
+和 `Collision Ahead` 误报。
+
+坡道处理：`synthetic_lidar.py` 不再把 45° 坡面作为 `/scan` 的 2D 障碍；全局代价地图
+只使用静态 `course_map`，动态避障交给局部代价地图，避免上坡入口被实时扫描误判为墙。
+
+注意：赛道改为 20m 后，旧的 PCD 地图只覆盖旧赛道范围。使用自定义航点前需要重新建图：
+
+```bash
+# 重启 Gazebo 后，遥控或通过 waypoint_cli 沿新赛道走完整条路
+ros2 service call /save_map std_srvs/srv/Trigger
+ros2 service call /waypoint/reload_map std_srvs/srv/Trigger
+```
+
+Nav2 使用 `course_map`，不受旧 PCD 影响。
 
 遥控（另一终端）：
 ```bash
@@ -216,13 +262,54 @@ ros2 service call /save_map std_srvs/srv/Trigger
 # 文件：~/pointcloud_maps/map_YYYYMMDD_HHMMSS.pcd
 ```
 
-### 6.3 测试结果
+### 6.3 航点自主导航
+
+启动后 RViz 中会显示 `/waypoint_map`（自动加载 `~/pointcloud_maps` 中最新的 PCD）。使用 **2D Goal Pose** 工具在地图上依次点选航点，然后：
+
+```bash
+ros2 service call /waypoint/start std_srvs/srv/Trigger
+```
+
+也可以完全用命令行手动设立航点：
+
+```bash
+ros2 run autoVehicle waypoint_cli.py add 3.0 0.0 --yaw 0
+ros2 run autoVehicle waypoint_cli.py add 22.73 1.2 --yaw 90
+ros2 run autoVehicle waypoint_cli.py start
+ros2 run autoVehicle waypoint_cli.py stop
+ros2 run autoVehicle waypoint_cli.py status
+```
+
+可用服务：
+
+- `/waypoint/add` — 通过 `rcl_interfaces/SetParameters` 添加 `x y z yaw_deg`
+- `/waypoint/start`、`/waypoint/stop`、`/waypoint/clear` — 启停与清空
+- `/waypoint/save`、`/waypoint/load` — 保存/加载 `~/waypoint_files/waypoints.json`
+- `/waypoint/status` — 查询当前状态、目标与里程
+- `/waypoint/reload_map` — 重新加载 `~/pointcloud_maps` 中最新的 PCD
+
+若需要使用 Nav2 的预建图导航，可直接运行 `ros2 launch autoVehicle nav_map.launch.py`；
+`nav_slam.launch.py` 仍保留为 slam_toolbox 建图入口。
+
+### 6.4 Nav2 2D Goal Pose 导航
+
+启动 Gazebo 和 Nav2 后，在 RViz 中选择 **2D Goal Pose** 工具，在 `course_map` 上点击目标位置并拖出朝向。Nav2 会依次执行：
+
+1. 全局路径规划（使用静态 `course_map`）
+2. 局部轨迹跟踪（使用 `/scan` 做动态避障）
+3. 到达目标后输出 `Goal succeeded`
+
+当前 `nav_map.launch.py` 未启动 `collision_monitor`，避免之前出现的参数解析错误；窄走廊和坡道参数已写入 `nav2_params.yaml`。
+
+### 6.5 测试结果
 
 - 扫描速率：10Hz（360 射线 + 环形地面扫描）
 - 单帧点数：~400-500（含墙壁垂直填充 + 地面点阵）
 - 累积速率：~4,000-5,000 点/秒
 - 自动保存：每 ~50 帧触发一次
 - 机器人成功遥控通过平直段→斜坡→干扰段→T字路口
+- 自定义航点：服务添加航点后机器人可自动行驶，`/cmd_vel` 正常输出
+- Nav2 规划：`ComputePathToPose` 在平直段和坡上均能成功返回路径
 - 点云实时显示墙壁表面（3D）、地面高程（含坡面）、走廊轮廓
 
 ---
@@ -234,11 +321,12 @@ ros2 service call /save_map std_srvs/srv/Trigger
 - **爬坡能力**：电磁铁吸附安全余量充足，45° 斜坡可靠通过 ✓
 - **遥控建图**：仿真环境已实现 3D 点云建图与 PCD 保存 ✓
 - **里程精度**：仿真使用地面真实里程计，无漂移
-- **感知与导航**：仿真 LiDAR 10Hz，Nav2 待集成
+- **感知与导航**：仿真 LiDAR 10Hz，PCD 航点巡航与 Nav2 预建图导航已实现 ✓
 
 ---
 
 ## 8. 相关文档
 
 - [pointCloud.md](pointCloud.md) — 点云建图详细文档（架构、核心组件、赛道模型、Bug 修复历程）
+- [navigate.md](navigate.md) — 航点导航、Nav2 配置与上坡排障整理
 - [testlog.md](testlog.md) — Gazebo 仿真测试日志（摩擦调试、控制器选择等历史记录）

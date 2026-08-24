@@ -52,6 +52,57 @@ Visualization Manager:
         Value: /lidar_points
       Use Fixed Frame: true
       Use rainbow: false
+    - Alpha: 1.0
+      Autocompute Intensity Bounds: true
+      Class: rviz_default_plugins/PointCloud2
+      Color Transformer: Intensity
+      Decay Time: 0.0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: Waypoint Map (PCD)
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 2
+      Size (m): 0.01
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Value: /waypoint_map
+      Use Fixed Frame: true
+      Use rainbow: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Waypoint Markers
+      Namespaces:
+        waypoints: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /waypoint_markers
+      Value: true
+    - Class: rviz_default_plugins/Path
+      Color: 255; 85; 255
+      Enabled: true
+      Name: Waypoint Path
+      Offset:
+        X: 0.0
+        Y: 0.0
+        Z: 0.05
+      Pose Style: None
+      Radius: 0.03
+      Shaft Diameter: 0.1
+      Shaft Length: 0.1
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /waypoint_path
+      Value: true
     - Class: rviz_default_plugins/RobotModel
       Description Topic:
         Value: /robot_description
@@ -66,13 +117,14 @@ Visualization Manager:
     - Class: rviz_default_plugins/Select
     - Class: rviz_default_plugins/Interact
     - Class: rviz_default_plugins/Measure
+    - Class: nav2_rviz_plugins/GoalTool
   Value: true
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 5.0
+      Distance: 25.0
       Focal Point:
-        X: 2.0
+        X: 10.0
         Y: 0.0
         Z: 0.5
       Name: Current View

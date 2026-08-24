@@ -86,11 +86,12 @@ def generate_launch_description():
         name='synthetic_lidar', output='screen',
         parameters=[{'num_samples':360, 'rate_hz':10.0}])])
 
-    mapper = TimerAction(period=6.0, actions=[Node(
-        package='autoVehicle', executable='pointcloud_mapper.py',
-        name='pointcloud_mapper', output='screen',
-        parameters=[{'downsample_input':1, 'publish_rate_hz':2.0,
-                     'save_dir':os.path.expanduser('~/pointcloud_maps')}])])
+    waypoint_nav = TimerAction(period=7.0, actions=[Node(
+        package='autoVehicle', executable='waypoint_navigator.py',
+        name='waypoint_navigator', output='screen',
+        parameters=[{'map_dir': os.path.expanduser('~/pointcloud_maps'),
+                     'map_file': '',
+                     'max_map_points': 100000}])])
 
     rviz = Node(package='rviz2', executable='rviz2', name='rviz2', output='screen',
         arguments=['-d', os.path.join(pkg_share, 'config', 'pointcloud_mapping.rviz')])
@@ -102,5 +103,6 @@ def generate_launch_description():
         DeclareLaunchArgument('world', default_value='course_test.sdf'),
         gz_sim, robot_state_pub, joint_state_pub, tf_ftb, tf_ofb,
         bridge_cmd_vel, bridge_odom, bridge_imu, *bridge_joints,
-        spawn, controller, pose_tf, synth_lidar, rviz, ros_diag,
+        spawn, controller, pose_tf, synth_lidar, waypoint_nav,
+        rviz, ros_diag,
     ])
