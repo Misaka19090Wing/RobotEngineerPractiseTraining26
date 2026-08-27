@@ -163,6 +163,59 @@ ros2 param set /waypoint_navigator obstacle_stop_angle 0.6
 ros2 param set /waypoint_navigator avoid_gain 1.5
 ```
 
+## 3.5 Nav2 2D Goal Pose 路径显示与速度控制
+
+RViz 配置已加入 Nav2 路径显示：
+
+- `/plan`：Nav2 全局规划路径
+- `/local_plan`：Nav2 局部轨迹
+- `/received_global_plan`：Nav2 接收到的全局路径
+
+设置 2D Goal Pose 后，RViz 会自动显示这些路径。
+
+### Nav2 速度控制
+
+Nav2 运行中可动态限制速度：
+
+```bash
+# 将最高速度限制为 0.5 m/s
+ros2 topic pub /speed_limit nav2_msgs/msg/SpeedLimit "{
+  percentage: false,
+  speed_limit: 0.5
+}" --qos-durability transient_local --qos-reliability reliable -r 1
+```
+
+也可以修改 `nav2_params.yaml` 中的控制器参数，例如：
+
+```yaml
+FollowPath:
+  max_vel_x: 0.5
+```
+
+修改后需要重启 Nav2。
+
+当前 Nav2 默认参数：
+
+```text
+controller: nav2_regulated_pure_pursuit_controller
+desired_linear_vel: 0.5
+lookahead_dist: 0.6
+min_lookahead_dist: 0.3
+max_lookahead_dist: 0.9
+rotate_to_heading_angular_vel: 1.5
+use_collision_detection: false
+use_regulated_linear_velocity_scaling: false
+use_cost_regulated_linear_velocity_scaling: false
+use_rotate_to_heading: false
+robot_radius: 0.07
+inflation_radius: 0.10
+```
+
+局部控制器已从 DWB 改为 Regulated Pure Pursuit，更适合窄走廊和 Seg3→Seg4 这种拐弯场景，能明显减少贴墙、右墙停住再重规划的现象。
+
+
+如果想使用“航点队列 + 参数控制 + 路径显示”的完整自定义方案，可以直接使用 `waypoint_navigator.py`，它已支持 A* 路径规划、路径显示和速度参数控制。
+
 ## 4. 已修复问题
 
 ### 4.1 旧 PGM 地图把走廊中心标记为障碍

@@ -103,6 +103,63 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /waypoint_path
       Value: true
+    - Class: rviz_default_plugins/Path
+      Color: 85; 170; 255
+      Enabled: true
+      Name: Nav2 Global Plan
+      Offset:
+        X: 0.0
+        Y: 0.0
+        Z: 0.08
+      Pose Style: None
+      Radius: 0.04
+      Shaft Diameter: 0.1
+      Shaft Length: 0.1
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /plan
+      Value: true
+    - Class: rviz_default_plugins/Path
+      Color: 255; 170; 0
+      Enabled: true
+      Name: Nav2 Local Plan
+      Offset:
+        X: 0.0
+        Y: 0.0
+        Z: 0.08
+      Pose Style: None
+      Radius: 0.04
+      Shaft Diameter: 0.1
+      Shaft Length: 0.1
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /local_plan
+      Value: true
+    - Class: rviz_default_plugins/Path
+      Color: 170; 255; 85
+      Enabled: true
+      Name: Nav2 Received Global Plan
+      Offset:
+        X: 0.0
+        Y: 0.0
+        Z: 0.08
+      Pose Style: None
+      Radius: 0.04
+      Shaft Diameter: 0.1
+      Shaft Length: 0.1
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /received_global_plan
+      Value: true
     - Class: rviz_default_plugins/RobotModel
       Description Topic:
         Value: /robot_description
