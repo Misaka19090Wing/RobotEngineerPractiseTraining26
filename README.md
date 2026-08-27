@@ -193,7 +193,7 @@ odom → base_footprint → base_link → (left_front_wheel, right_rear_wheel, r
 
 ### 5.4 URDF 传感器
 
-- **激光雷达**：CPU `lidar`（ray 类型），360 射线，10Hz，安装于 `radar_link`
+- **激光雷达**：CPU `lidar`（ray 类型），720 射线（可配置），10Hz，安装于 `radar_link`
 - **IMU**：`imu` 类型，200Hz，安装于 `base_link`
 - **里程计**：`OdometryPublisher` 系统插件，发布地面真实位姿
 
@@ -299,7 +299,7 @@ ros2 run autoVehicle waypoint_cli.py status
 
 ### 6.5 测试结果
 
-- 扫描速率：10Hz（360 射线 + 环形地面扫描）
+- 扫描速率：10Hz（720 射线 + 墙面插值 + 环形地面扫描）
 - 单帧点数：~400-500（含墙壁垂直填充 + 地面点阵）
 - 累积速率：~4,000-5,000 点/秒
 - 自动保存：每 ~50 帧触发一次

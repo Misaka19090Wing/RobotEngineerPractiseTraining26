@@ -84,7 +84,9 @@ def generate_launch_description():
     synth_lidar = TimerAction(period=5.0, actions=[Node(
         package='autoVehicle', executable='synthetic_lidar.py',
         name='synthetic_lidar', output='screen',
-        parameters=[{'num_samples':360, 'rate_hz':10.0}])])
+        parameters=[{'num_samples':720, 'rate_hz':10.0,
+                     'wall_interp_step':0.05,
+                     'max_wall_interp_gap':0.8}])])
 
     waypoint_nav = TimerAction(period=7.0, actions=[Node(
         package='autoVehicle', executable='waypoint_navigator.py',

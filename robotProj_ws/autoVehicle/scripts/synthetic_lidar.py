@@ -73,14 +73,24 @@ class IntegratedMapper(Node):
         self.sp=self.create_publisher(LaserScan,'/scan',10)
         self.fp=self.create_publisher(PointCloud2,'/lidar_points',10)
         self.mp=self.create_publisher(PointCloud2,'/pointcloud_map',10)
+        self.declare_parameter('num_samples', 720)
+        self.declare_parameter('rate_hz', 10.0)
+        self.declare_parameter('wall_interp_step', 0.05)
+        self.declare_parameter('max_wall_interp_gap', 0.8)
+        self.num_samples = int(self.get_parameter('num_samples').value)
+        self.rate_hz = float(self.get_parameter('rate_hz').value)
+        self.wall_interp_step = float(self.get_parameter('wall_interp_step').value)
+        self.max_wall_interp_gap = float(self.get_parameter('max_wall_interp_gap').value)
         self.save_dir=os.path.expanduser('~/pointcloud_maps')
         os.makedirs(self.save_dir,exist_ok=True)
         self.save_srv=self.create_service(Trigger,'/save_map',self.save_cb)
         self.map_pts=[]
         self._cnt=0
         self._sw=0
-        self.get_logger().info('IntegratedMapper | scan+floor+map @10Hz')
-        self.timer=self.create_timer(0.1,self.tick)
+        self.get_logger().info(
+            f'IntegratedMapper | scan+floor+map @{self.rate_hz}Hz '
+            f'rays={self.num_samples} interp={self.wall_interp_step:.2f}m')
+        self.timer=self.create_timer(1.0/self.rate_hz,self.tick)
         self.map_timer=self.create_timer(0.5,self.publish_map)
 
     def tick(self):
@@ -104,9 +114,11 @@ class IntegratedMapper(Node):
         s=LaserScan(); s.header.stamp=self.get_clock().now().to_msg()
         s.header.frame_id='radar_link'
         s.angle_min=-math.pi; s.angle_max=math.pi
-        s.angle_increment=2*math.pi/360; s.range_min=RNG_MIN; s.range_max=RNG_MAX
+        s.angle_increment=2*math.pi/self.num_samples
+        s.range_min=RNG_MIN; s.range_max=RNG_MAX
         rng=[]; ang=s.angle_min; wpts=[]
-        for _ in range(360):
+        prev_valid=False; prev_wx=0.0; prev_wy=0.0
+        for _ in range(self.num_samples):
             # Transform ray direction from radar_link to world frame
             dx_local=math.cos(ang); dy_local=math.sin(ang)
             dx_world=r00*dx_local+r01*dy_local
@@ -126,8 +138,23 @@ class IntegratedMapper(Node):
                 for vz in (fz_wall, fz_wall+0.1, fz_wall+0.2):
                     if abs(vz-wz_w)>0.01:  # skip if same as hit point
                         wpts.append((wx_w, wy_w, vz, 0.35))
+                # Interpolate between adjacent hits to fill protruding walls
+                if prev_valid:
+                    gap=math.hypot(wx_w-prev_wx, wy_w-prev_wy)
+                    if gap<=self.max_wall_interp_gap:
+                        steps=int(gap/self.wall_interp_step)
+                        for k in range(1, steps):
+                            t=k/steps
+                            ix=prev_wx+(wx_w-prev_wx)*t
+                            iy=prev_wy+(wy_w-prev_wy)*t
+                            fz=floor_z(ix)
+                            for vz in (fz, fz+0.1, fz+0.2):
+                                wpts.append((ix, iy, vz, 0.35))
+                prev_valid=True
+                prev_wx=wx_w; prev_wy=wy_w
             else:
                 rng.append(float('nan'))
+                prev_valid=False
             ang+=s.angle_increment
         s.ranges=rng; self.sp.publish(s)
         self.map_pts.extend(wpts)
@@ -166,7 +193,7 @@ class IntegratedMapper(Node):
             hits=sum(1 for r in rng if not math.isnan(r))
             self.get_logger().info(
                 f'[SCAN #{self._cnt}] ({lx:.2f},{ly:.2f},{lz:.2f}) '
-                f'wall_hits={hits}/360 floor={len(fp_world)} map={len(self.map_pts)}')
+                f'wall_hits={hits}/{self.num_samples} floor={len(fp_world)} map={len(self.map_pts)}')
         elif self._cnt%50==0:
             self._sw+=1
             self.get_logger().info(
