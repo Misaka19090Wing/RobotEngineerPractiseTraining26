@@ -2,12 +2,12 @@
 
 ## 项目状态
 
-- [x] **仿真环境搭建完成** — ROS2 Jazzy + Gazebo Harmonic + RViz2
-- [x] **遥控驾驶** — teleop_twist_keyboard + 四轮差速控制器
-- [x] **3D 点云建图** — synthetic_lidar.py 集成扫描+累积+保存
-- [x] **PCD 地图保存** — 自动/手动保存 ASCII PCD 文件
-- [x] **航点自主导航** — 基于已保存 PCD 地图手动设立航点
-- [x] **Nav2 预建图导航** — `nav_map.launch.py` 可选启动
+- [X] **仿真环境搭建完成** — ROS2 Jazzy + Gazebo Harmonic + RViz2
+- [X] **遥控驾驶** — teleop_twist_keyboard + 四轮差速控制器
+- [X] **3D 点云建图** — synthetic_lidar.py 集成扫描+累积+保存
+- [X] **PCD 地图保存** — 自动/手动保存 ASCII PCD 文件
+- [X] **航点自主导航** — 基于已保存 PCD 地图手动设立航点
+- [X] **Nav2 预建图导航** — `nav_map.launch.py` 可选启动
 - [ ] 传感器融合（IMU + 里程计）
 - [ ] SLAM / 完整导航栈
 
@@ -17,8 +17,8 @@
 
 ## 1. 总体概述
 
-机器人采用**四轮独立直驱差速转向**布局，整车尺寸 ≤180 mm × 180 mm × 95 mm，总重 ≤2 kg，具备原地转向能力。通过**电磁铁吸附**在金属桥架表面行驶，可通行平直段、45°斜坡及直角弯。  
-感知系统采用**高分辨率光电编码器 + 小型激光雷达 + IMU**，融合轮式里程计与激光里程计，实现 10 m 内累计误差 ≤0.1 m（≤1%）。  
+机器人采用**四轮独立直驱差速转向**布局，整车尺寸 ≤180 mm × 180 mm × 95 mm，总重 ≤2 kg，具备原地转向能力。通过**电磁铁吸附**在金属桥架表面行驶，可通行平直段、45°斜坡及直角弯。
+感知系统采用**高分辨率光电编码器 + 小型激光雷达 + IMU**，融合轮式里程计与激光里程计，实现 10 m 内累计误差 ≤0.1 m（≤1%）。
 软件基于 ROS2，集成点云处理、SLAM、路径规划及自主导航，支持遥控驾驶与航点自主巡航，并实时显示环境点云和分段距离。
 
 ---
@@ -35,13 +35,13 @@
 
 ### 2.2 差速转向方程
 
-四轮电机采用左前/左后同步、右前/右后同步的控制方式。  
-令左侧车轮转速为 $ω_L​$，右侧车轮转速为 $ω_R$​（单位 rad/s），则中心线速度 $v$ 与角速度 $ω_z$​ 为：
+四轮电机采用左前/左后同步、右前/右后同步的控制方式。
+令左侧车轮转速为 $ω_L$，右侧车轮转速为 $ω_R$（单位 rad/s），则中心线速度 $v$ 与角速度 $ω_z$ 为：
 
 $$
 \begin{align}
 v&=\frac{r}{2}(ω_L+ω_R) \\
-ω_z&​=\frac{r}{2d}​(ω_R​−ω_L​),d=\frac{\sqrt{B^2+L^2}}{2}​​≈0.099m
+ω_z&=\frac{r}{2d}(ω_R−ω_L),d=\frac{\sqrt{B^2+L^2}}{2}≈0.099m
 \end{align}
 $$
 
@@ -64,38 +64,33 @@ $$
 
 ### 3.2 主要器件选型与重量估算
 
-|部件|型号|数量|单重(g)|总重(g)|
-|---|---|---|---|---|
-|无刷减速电机|DJI M2006（24V，36:1，4096线编码器）|4|90|360|
-|电机驱动|SimpleFOC Mini（宽压版，支持24V）|4|12|48|
-|激光雷达|思岚 LD06（10Hz）|1|120|120|
-|IMU|MPU6050 模块|1|5|5|
-|主控板|树莓派 4B（4GB）|1|45|45|
-|底层控制板|STM32F407VET6|1|30|30|
-|电池|6S LiPo 1300mAh（22.2V）|1|210|210|
-|电磁铁|KK-P20/15（额定吸力 20N）|4|55|220|
-|车轮|30mm 硅胶轮|4|10|40|
-|底板及结构件|碳纤维板+3D打印件|1|120|120|
-|其他|线材、降压模块、螺丝|—|50|50|
-|**总计**||||**≈1258 g**|
+| 部件           | 型号                                 | 数量 | 单重(g) | 总重(g)            |
+| -------------- | ------------------------------------ | ---- | ------- | ------------------ |
+| 无刷减速电机   | DJI M2006（24V，36:1，4096线编码器） | 4    | 90      | 360                |
+| 电机驱动       | SimpleFOC Mini（宽压版，支持24V）    | 4    | 12      | 48                 |
+| 激光雷达       | 思岚 LD06（10Hz）                    | 1    | 120     | 120                |
+| IMU            | MPU6050 模块                         | 1    | 5       | 5                  |
+| 主控板         | 树莓派 4B（4GB）                     | 1    | 45      | 45                 |
+| 底层控制板     | STM32F407VET6                        | 1    | 30      | 30                 |
+| 电池           | 6S LiPo 1300mAh（22.2V）             | 1    | 210     | 210                |
+| 电磁铁         | KK-P20/15（额定吸力 20N）            | 4    | 55      | 220                |
+| 车轮           | 30mm 硅胶轮                          | 4    | 10      | 40                 |
+| 底板及结构件   | 碳纤维板+3D打印件                    | 1    | 120     | 120                |
+| 其他           | 线材、降压模块、螺丝                 | —   | 50      | 50                 |
+| **总计** |                                      |      |         | **≈1258 g** |
 
 总重约 1.26 kg，远小于 2 kg 指标，保留充足负载余量。
 
 ### 3.3 爬坡与电磁铁吸附力计算
 
 - 最大设计总质量 $m=2 kg$，重力 $G=19.6 N$
-    
 - 45° 斜坡下滑力：$F_{down}=mgsin⁡45\degree≈13.86 N$
-    
 - 硅胶轮与钢面摩擦系数 $μ=0.7$，所需总正压力：
-    
-    $N_{total}≥\frac{F_{down}}{μ}=\frac{13.86}{0.7}≈19.8 N$
+
+  $N_{total}≥\frac{F_{down}}{μ}=\frac{13.86}{0.7}≈19.8 N$
 - 重力法向分力：$N_g=mgcos⁡45\degree≈13.86 N$
-    
 - 需电磁铁额外吸附力：$F_{mag\_sum}≥19.8−13.86=5.94 N$
-    
 - 单个电磁铁所需吸力：≥1.5 N，所选 KK-P20/15（额定 20N）留有 13 倍安全余量，可克服气隙、灰尘等因素。
-    
 
 **电机扭矩校核**：M2006 额定输出扭矩 0.18 N·m（减速后），爬坡时每轮所需扭矩约 0.075 N·m，远小于电机能力，满足需求。
 
@@ -116,16 +111,12 @@ $$
 ### 4.2 电机驱动与编码器
 
 - 四路 SimpleFOC Mini 驱动板，支持 24V 输入，通过 CAN/串口与 STM32 通信。
-    
 - M2006 自带 4096 线输出轴编码器，信号直接接入驱动板，实现 FOC 速度/位置闭环，同时回传至 STM32 用于里程计计算。
-    
 
 ### 4.3 感知与通讯接口
 
 - **LD06 激光雷达**：UART 转 USB 连接树莓派，10 Hz 扫描，ROS2 驱动 `sllidar_ros2`。
-    
 - **MPU6050 IMU**：I2C 连接 STM32，200 Hz 读取角速度和加速度，经低通滤波后发送给树莓派。
-    
 - **摄像头**：树莓派 CSI 接口广角摄像头，用于遥控场景视野。
 - **STM32–树莓派**：USB 虚拟串口，200 Hz 频率交换电机状态与控制指令。
 
@@ -135,17 +126,17 @@ $$
 
 ### 5.1 当前已实现节点
 
-| 节点 | 可执行文件 | 功能 |
-|---|---|---|
-| **diff_drive_controller** | `diff_drive_controller.py` | 订阅 `/cmd_vel`，计算四轮转速，通过 `ros_gz_bridge` 驱动 Gazebo 关节 |
-| **pose_tf_broadcaster** | `pose_tf_broadcaster.py` | 订阅 `/odom`，发布动态 `odom→base_footprint` TF |
-| **synthetic_lidar** ★ | `synthetic_lidar.py` | **集成 LiDAR 扫描 + 点云累积 + 地图发布 + PCD 保存** |
-| **waypoint_navigator** ★ | `waypoint_navigator.py` | **加载 PCD 地图、手动航点队列、差速巡航 + 激光避障** |
-| `waypoint_cli` | `waypoint_cli.py` | 命令行添加/启停/保存航点 |
-| `generate_course_map` | `generate_course_map.py` | 按赛道几何生成 Nav2 使用的 `course_map.pgm/yaml` |
-| `robot_state_publisher` | ROS2 标准 | 从 URDF 发布 `base_link→child_links` TF |
-| `joint_state_publisher` | ROS2 标准 | 发布零位关节状态，驱动轮子 TF |
-| `ros_gz_bridge` ×8 | ROS2 标准 | cmd_vel、odometry、IMU、关节速度 桥接 |
+| 节点                            | 可执行文件                   | 功能                                                                    |
+| ------------------------------- | ---------------------------- | ----------------------------------------------------------------------- |
+| **diff_drive_controller** | `diff_drive_controller.py` | 订阅`/cmd_vel`，计算四轮转速，通过 `ros_gz_bridge` 驱动 Gazebo 关节 |
+| **pose_tf_broadcaster**   | `pose_tf_broadcaster.py`   | 订阅`/odom`，发布动态 `odom→base_footprint` TF                     |
+| **synthetic_lidar** ★    | `synthetic_lidar.py`       | **集成 LiDAR 扫描 + 点云累积 + 地图发布 + PCD 保存**              |
+| **waypoint_navigator** ★ | `waypoint_navigator.py`    | **加载 PCD 地图、手动航点队列、差速巡航 + 激光避障**              |
+| `waypoint_cli`                | `waypoint_cli.py`          | 命令行添加/启停/保存航点                                                |
+| `generate_course_map`         | `generate_course_map.py`   | 按赛道几何生成 Nav2 使用的`course_map.pgm/yaml`                       |
+| `robot_state_publisher`       | ROS2 标准                    | 从 URDF 发布`base_link→child_links` TF                               |
+| `joint_state_publisher`       | ROS2 标准                    | 发布零位关节状态，驱动轮子 TF                                           |
+| `ros_gz_bridge` ×8           | ROS2 标准                    | cmd_vel、odometry、IMU、关节速度 桥接                                   |
 
 > ★ `synthetic_lidar.py` 是整个点云建图系统的唯一核心节点。详见架构图和 [pointCloud.md](pointCloud.md)。
 
@@ -186,6 +177,7 @@ nav_map.launch.py ← course_map + /scan + TF
 ```
 
 完整 TF 树：
+
 ```
 odom → base_footprint → base_link → (left_front_wheel, right_rear_wheel, radar_link, ...)
 ```
@@ -211,12 +203,12 @@ odom → base_footprint → base_link → (left_front_wheel, right_rear_wheel, r
 
 ### 6.1 赛道几何
 
-| 区域 | X 范围 (m) | Z 范围 (m) | 墙壁 |
-|---|---|---|---|
-| 平直段 | [0, 20] | 0 | Y = ±0.15 |
-| 45° 斜坡 | [20, 21.13] | 0 → 1.13 | Y = ±0.15 |
-| 干扰段 | [21.13, 22.58] | 1.13 | Y = ±0.15，地面含凸起 |
-| T 字路口 | ~22.73 | 1.13 | Y 向展开 ±1.6m |
+| 区域      | X 范围 (m)     | Z 范围 (m) | 墙壁                   |
+| --------- | -------------- | ---------- | ---------------------- |
+| 平直段    | [0, 20]        | 0          | Y = ±0.15             |
+| 45° 斜坡 | [20, 21.13]    | 0 → 1.13  | Y = ±0.15             |
+| 干扰段    | [21.13, 22.58] | 1.13       | Y = ±0.15，地面含凸起 |
+| T 字路口  | ~22.73         | 1.13       | Y 向展开 ±1.6m        |
 
 ### 6.2 启动方式
 
@@ -226,11 +218,13 @@ ros2 launch autoVehicle gazebo.launch.py
 ```
 
 可选：基于已保存 PGM/YAML 地图启动 Nav2（需要先运行上面的 Gazebo 仿真）：
+
 ```bash
 ros2 launch autoVehicle nav_map.launch.py
 ```
 
 Nav2 默认使用 `maps/course_map.yaml`。若需要重新生成这张干净栅格图：
+
 ```bash
 ros2 run autoVehicle generate_course_map.py
 ```
@@ -252,11 +246,13 @@ ros2 service call /waypoint/reload_map std_srvs/srv/Trigger
 Nav2 使用 `course_map`，不受旧 PCD 影响。
 
 遥控（另一终端）：
+
 ```bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
 保存地图：
+
 ```bash
 ros2 service call /save_map std_srvs/srv/Trigger
 # 文件：~/pointcloud_maps/map_YYYYMMDD_HHMMSS.pcd

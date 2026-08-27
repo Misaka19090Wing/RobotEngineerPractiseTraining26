@@ -73,6 +73,33 @@ maps/course_map.yaml
 ros2 launch autoVehicle nav_map.launch.py map:=/path/to/map.yaml
 ```
 
+## 3.3 自定义航点速度控制
+
+默认最高线速度为 `0.22 m/s`。可通过以下参数调整：
+
+```text
+max_linear_speed   最高线速度，单位 m/s
+max_angular_speed  最高角速度，单位 rad/s
+linear_gain        线速度随距离增长的比例
+angular_gain       角速度随角度误差增长的比例
+```
+
+启动前指定：
+
+```bash
+ros2 run autoVehicle waypoint_navigator.py --ros-args   -p max_linear_speed:=0.5   -p max_angular_speed:=2.0   -p linear_gain:=2.0
+```
+
+运行中动态调整（重启无需，立即生效）：
+
+```bash
+ros2 param set /waypoint_navigator max_linear_speed 0.5
+ros2 param set /waypoint_navigator max_angular_speed 2.0
+ros2 param set /waypoint_navigator linear_gain 2.0
+```
+
+如果通过 `gazebo.launch.py` 启动，直接使用上面的 `ros2 param set` 即可。
+
 ## 4. 已修复问题
 
 ### 4.1 旧 PGM 地图把走廊中心标记为障碍

@@ -184,8 +184,10 @@ class WaypointNavigator(Node):
         self.declare_parameter('map_dir', DEFAULT_MAP_DIR)
         self.declare_parameter('max_map_points', 100000)
         self.declare_parameter('waypoint_file', DEFAULT_WAYPOINT_FILE)
-        self.declare_parameter('max_linear_speed', 0.22)
+        self.declare_parameter('max_linear_speed', 0.8)
         self.declare_parameter('max_angular_speed', 1.2)
+        self.declare_parameter('linear_gain', 1.2)
+        self.declare_parameter('angular_gain', 2.5)
         self.declare_parameter('goal_tolerance', 0.08)
         self.declare_parameter('yaw_tolerance', 0.18)
         self.declare_parameter('obstacle_stop_distance', 0.10)
@@ -195,6 +197,8 @@ class WaypointNavigator(Node):
 
         self.max_linear_speed = self.get_parameter('max_linear_speed').value
         self.max_angular_speed = self.get_parameter('max_angular_speed').value
+        self.linear_gain = self.get_parameter('linear_gain').value
+        self.angular_gain = self.get_parameter('angular_gain').value
         self.goal_tolerance = self.get_parameter('goal_tolerance').value
         self.yaw_tolerance = self.get_parameter('yaw_tolerance').value
         self.obstacle_stop = self.get_parameter('obstacle_stop_distance').value
@@ -238,6 +242,7 @@ class WaypointNavigator(Node):
         self.reload_map_srv = self.create_service(
             Trigger, '/waypoint/reload_map', self.reload_map_cb)
         self.add_srv = self.create_service(SetParameters, '/waypoint/add', self.add_cb)
+        self.add_on_set_parameters_callback(self._param_cb)
 
         rate = self.get_parameter('control_rate_hz').value
         self.tf_timer = self.create_timer(0.05, self._tf_pose_cb)
@@ -489,6 +494,29 @@ class WaypointNavigator(Node):
         self.get_logger().info(response.message)
         return response
 
+    def _param_cb(self, params):
+        for param in params:
+            name = param.name
+            if name == 'max_linear_speed':
+                self.max_linear_speed = param.value
+            elif name == 'max_angular_speed':
+                self.max_angular_speed = param.value
+            elif name == 'linear_gain':
+                self.linear_gain = param.value
+            elif name == 'angular_gain':
+                self.angular_gain = param.value
+            elif name == 'goal_tolerance':
+                self.goal_tolerance = param.value
+            elif name == 'yaw_tolerance':
+                self.yaw_tolerance = param.value
+            elif name == 'obstacle_stop_distance':
+                self.obstacle_stop = param.value
+            elif name == 'obstacle_slow_distance':
+                self.obstacle_slow = param.value
+            elif name == 'avoid_gain':
+                self.avoid_gain = param.value
+        return SetParametersResult(successful=True, reason='speed parameters updated')
+
     def _publish_visuals(self):
         stamp = self.get_clock().now().to_msg()
         markers = MarkerArray()
@@ -621,11 +649,11 @@ class WaypointNavigator(Node):
                 return
             twist.linear.x = 0.0
             twist.angular.z = _clamp(
-                yaw_error * 2.5, -self.max_angular_speed, self.max_angular_speed)
+                yaw_error * self.angular_gain, -self.max_angular_speed, self.max_angular_speed)
         else:
-            linear = _clamp(distance * 1.2, 0.0, self.max_linear_speed)
+            linear = _clamp(distance * self.linear_gain, 0.0, self.max_linear_speed)
             angular = _clamp(
-                yaw_error * 2.5, -self.max_angular_speed, self.max_angular_speed)
+                yaw_error * self.angular_gain, -self.max_angular_speed, self.max_angular_speed)
             if abs(yaw_error) > math.radians(75.0):
                 linear = 0.0
             elif abs(yaw_error) > math.radians(30.0):
