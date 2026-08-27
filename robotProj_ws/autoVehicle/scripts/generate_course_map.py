@@ -21,15 +21,22 @@ MAX_X = 23.2
 MAX_Y = 1.7
 
 CORR_END = 22.58
-JUNC_L = 22.48
-JUNC_R = 22.98
+JUNC_L_INNER = 22.5314
+JUNC_R_INNER = 22.9314
+JUNC_GAP_Y = 0.20
 JUNC_Y = 1.60
+HW = 0.15
 
 
 def is_free(x, y):
-    if 0.0 <= x <= CORR_END and abs(y) <= 0.15:
+    # Approach corridor
+    if 0.0 <= x <= CORR_END and abs(y) <= HW:
         return True
-    if JUNC_L <= x <= JUNC_R and abs(y) <= JUNC_Y:
+    # Left wall opening (|y| < 0.2) connects corridor to junction
+    if JUNC_L_INNER <= x <= CORR_END and abs(y) <= JUNC_GAP_Y:
+        return True
+    # Junction floor between the two wall inner surfaces
+    if JUNC_L_INNER <= x <= JUNC_R_INNER and abs(y) <= JUNC_Y:
         return True
     return False
 

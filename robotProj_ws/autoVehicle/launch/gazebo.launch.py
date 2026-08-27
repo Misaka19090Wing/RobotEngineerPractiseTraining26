@@ -11,6 +11,7 @@ def generate_launch_description():
     pkg_share = get_package_share_directory('autoVehicle')
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
     world_name = LaunchConfiguration('world')
+    build_map = LaunchConfiguration('build_map')
 
     # Gazebo
     gz_sim = IncludeLaunchDescription(
@@ -86,7 +87,9 @@ def generate_launch_description():
         name='synthetic_lidar', output='screen',
         parameters=[{'num_samples':720, 'rate_hz':10.0,
                      'wall_interp_step':0.05,
-                     'max_wall_interp_gap':0.8}])])
+                     'max_wall_interp_gap':0.8,
+                     'enable_mapping': build_map,
+                     'publish_pointcloud_map': build_map}])])
 
     waypoint_nav = TimerAction(period=7.0, actions=[Node(
         package='autoVehicle', executable='waypoint_navigator.py',
@@ -103,6 +106,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value='course_test.sdf'),
+        DeclareLaunchArgument('build_map', default_value='true',
+                              description='Build and publish the 3D point cloud map'),
         gz_sim, robot_state_pub, joint_state_pub, tf_ftb, tf_ofb,
         bridge_cmd_vel, bridge_odom, bridge_imu, *bridge_joints,
         spawn, controller, pose_tf, synth_lidar, waypoint_nav,

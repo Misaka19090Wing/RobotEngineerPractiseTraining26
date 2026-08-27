@@ -217,6 +217,12 @@ cd robotProj_ws && source install/setup.bash
 ros2 launch autoVehicle gazebo.launch.py
 ```
 
+仅导航、不建图时（降低点云扫描负载）：
+
+```bash
+ros2 launch autoVehicle gazebo.launch.py build_map:=false
+```
+
 可选：基于已保存 PGM/YAML 地图启动 Nav2（需要先运行上面的 Gazebo 仿真）：
 
 ```bash
@@ -262,6 +268,8 @@ ros2 service call /save_map std_srvs/srv/Trigger
 
 启动后 RViz 中会显示 `/waypoint_map`（自动加载 `~/pointcloud_maps` 中最新的 PCD）。使用 **2D Goal Pose** 工具在地图上依次点选航点，然后：
 
+自定义航点会先通过 `course_map` 做 A* 路径规划，再按规划路径行驶，避免直线冲墙。
+
 ```bash
 ros2 service call /waypoint/start std_srvs/srv/Trigger
 ```
@@ -269,7 +277,8 @@ ros2 service call /waypoint/start std_srvs/srv/Trigger
 也可以完全用命令行手动设立航点：
 
 ```bash
-ros2 run autoVehicle waypoint_cli.py add 3.0 0.0 --yaw 0
+ros2 run autoVehicle waypoint_cli.py add 10.0 0.0 --yaw 0
+ros2 run autoVehicle waypoint_cli.py add 22.73 0.0 --yaw 0
 ros2 run autoVehicle waypoint_cli.py add 22.73 1.2 --yaw 90
 ros2 run autoVehicle waypoint_cli.py start
 ros2 run autoVehicle waypoint_cli.py stop

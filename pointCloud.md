@@ -140,6 +140,13 @@ source install/setup.bash
 ros2 launch autoVehicle gazebo.launch.py
 ```
 
+
+如果只需要 `/scan` 导航而不构建/发布 3D 点云，可关闭建图模式：
+
+```bash
+ros2 launch autoVehicle gazebo.launch.py build_map:=false
+```
+
 遥控（另一个终端）：
 
 ```bash

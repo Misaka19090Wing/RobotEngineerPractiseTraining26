@@ -35,6 +35,13 @@ cd robotProj_ws && source install/setup.bash
 ros2 launch autoVehicle gazebo.launch.py
 ```
 
+
+仅导航时可以用 `build_map:=false` 关闭点云累积，降低硬件负载：
+
+```bash
+ros2 launch autoVehicle gazebo.launch.py build_map:=false
+```
+
 RViz 中会显示 PCD 地图，使用 **2D Goal Pose** 在地图上依次点选航点。也可以使用命令行：
 
 ```bash
@@ -73,32 +80,88 @@ maps/course_map.yaml
 ros2 launch autoVehicle nav_map.launch.py map:=/path/to/map.yaml
 ```
 
-## 3.3 自定义航点速度控制
+## 3.3 自定义航点路径规划
 
-默认最高线速度为 `0.22 m/s`。可通过以下参数调整：
+自定义航点默认启用基于 `course_map` 的 A* 路径规划：
+
+- 添加航点后，会先从机器人当前位置到目标航点规划一条沿走廊的路径。
+- A* 带软代价场，会自动偏向走廊/缺口中心，避免贴墙路径。
+- 规划出的中间点会自动插入航点队列，避免小车直线冲向墙壁。
+- 如果 `course_map` 加载失败，会回退到原来的直线航点跟踪模式。
+
+相关参数：
 
 ```text
-max_linear_speed   最高线速度，单位 m/s
-max_angular_speed  最高角速度，单位 rad/s
-linear_gain        线速度随距离增长的比例
-angular_gain       角速度随角度误差增长的比例
+plan_enabled           是否启用 A*，默认 true
+plan_map_file          规划地图，默认 course_map.yaml
+plan_inflation_cells   障碍膨胀格数，默认 3（0.06m）
+plan_path_spacing      规划路径点间距，默认 0.25m
+path_lookahead        路径前瞻距离，默认 0.6m
+```
+
+修改规划参数：
+
+```bash
+ros2 run autoVehicle waypoint_navigator.py --ros-args   -p plan_enabled:=true   -p plan_path_spacing:=0.25
+```
+
+## 3.4 自定义航点速度控制
+
+速度控制已改为“巡航 + 接近减速 + 加速度限制”，不会再因为 `distance × 1.2` 在整段路上忽快忽慢。
+
+相关参数：
+
+```text
+max_linear_speed    巡航最高线速度，单位 m/s
+max_angular_speed   最高角速度，单位 rad/s
+min_linear_speed    接近目标时的最低线速度，单位 m/s
+approach_distance   开始减速的距离，单位 m
+linear_accel_limit  线加速度限制，单位 m/s²
+angular_accel_limit 角加速度限制，单位 rad/s²
+```
+
+默认值：
+
+```text
+max_linear_speed: 0.8
+min_linear_speed: 0.08
+approach_distance: 0.6
+linear_accel_limit: 0.6
+angular_accel_limit: 2.0
 ```
 
 启动前指定：
 
 ```bash
-ros2 run autoVehicle waypoint_navigator.py --ros-args   -p max_linear_speed:=0.5   -p max_angular_speed:=2.0   -p linear_gain:=2.0
+ros2 run autoVehicle waypoint_navigator.py --ros-args   -p max_linear_speed:=0.8   -p min_linear_speed:=0.1   -p approach_distance:=0.8   -p linear_accel_limit:=0.8
 ```
 
-运行中动态调整（重启无需，立即生效）：
+运行中动态调整：
 
 ```bash
-ros2 param set /waypoint_navigator max_linear_speed 0.5
-ros2 param set /waypoint_navigator max_angular_speed 2.0
-ros2 param set /waypoint_navigator linear_gain 2.0
+ros2 param set /waypoint_navigator max_linear_speed 0.8
+ros2 param set /waypoint_navigator approach_distance 0.8
+ros2 param set /waypoint_navigator linear_accel_limit 0.8
 ```
 
 如果通过 `gazebo.launch.py` 启动，直接使用上面的 `ros2 param set` 即可。
+
+避障参数：
+
+```text
+obstacle_stop_distance  正前方障碍停车距离，默认 0.08m
+obstacle_slow_distance  正前方障碍开始减速距离，默认 0.30m
+obstacle_stop_angle     正前方停车判定角，默认 0.5rad（约 28°）
+avoid_gain              侧向避让强度，默认 1.2
+```
+
+只有正前方窄角度内距离过近才停车；侧墙会触发左右避让，不再直接把小车逼停。
+
+```bash
+ros2 param set /waypoint_navigator obstacle_stop_distance 0.06
+ros2 param set /waypoint_navigator obstacle_stop_angle 0.6
+ros2 param set /waypoint_navigator avoid_gain 1.5
+```
 
 ## 4. 已修复问题
 

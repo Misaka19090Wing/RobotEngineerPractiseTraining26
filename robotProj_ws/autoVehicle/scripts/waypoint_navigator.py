@@ -23,13 +23,17 @@ Services:
   /waypoint/status  (std_srvs/Trigger)
   /waypoint/reload_map (std_srvs/Trigger)
 """
+import heapq
 import json
 import math
 import os
 import struct
 from collections import deque
 
+import yaml
+
 import rclpy
+from ament_index_python.packages import get_package_share_directory
 from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry, Path
@@ -176,6 +180,181 @@ def load_pcd(pcd_path, max_points=100000):
     return result
 
 
+
+class GridPlanner:
+    """A* planner on the generated course occupancy grid."""
+
+    NEIGHBORS = (
+        (1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0),
+        (1, 1, math.sqrt(2.0)), (1, -1, math.sqrt(2.0)),
+        (-1, 1, math.sqrt(2.0)), (-1, -1, math.sqrt(2.0)),
+    )
+
+    def __init__(self, yaml_path, inflation_cells=3):
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            meta = yaml.safe_load(f)
+        self.resolution = float(meta['resolution'])
+        self.origin_x = float(meta['origin'][0])
+        self.origin_y = float(meta['origin'][1])
+        image_path = os.path.join(os.path.dirname(yaml_path), meta['image'])
+        self.grid, self.width, self.height = self._load_pgm(image_path)
+        self._inflate(inflation_cells)
+        self._build_cost(soft_radius=6)
+
+    def _load_pgm(self, path):
+        with open(path, 'rb') as f:
+            data = f.read()
+        idx = 0
+        tokens = []
+        while True:
+            end = data.find(b'\n', idx)
+            if end < 0:
+                raise ValueError('PGM header not terminated')
+            line = data[idx:end].strip()
+            idx = end + 1
+            if line.startswith(b'#'):
+                continue
+            tokens.extend(line.split())
+            if len(tokens) >= 4:
+                break
+        magic = tokens[0].decode()
+        width = int(tokens[1])
+        height = int(tokens[2])
+        if magic == 'P5':
+            while idx < len(data) and data[idx:idx+1].isspace():
+                idx += 1
+            raw = data[idx:idx + width * height]
+            if len(raw) < width * height:
+                raise ValueError('PGM pixel data truncated')
+            grid = bytearray(raw)
+        elif magic == 'P2':
+            rest = data[idx:].split()
+            grid = bytearray(int(v) for v in rest[:width * height])
+        else:
+            raise ValueError(f'Unsupported PGM format: {magic}')
+        return grid, width, height
+
+    def _inflate(self, cells):
+        if cells <= 0:
+            return
+        original = bytearray(self.grid)
+        for r in range(self.height):
+            for c in range(self.width):
+                idx = r * self.width + c
+                if original[idx] != 0:
+                    continue
+                for dr in range(-cells, cells + 1):
+                    nr = r + dr
+                    if nr < 0 or nr >= self.height:
+                        continue
+                    for dc in range(-cells, cells + 1):
+                        nc = c + dc
+                        if nc < 0 or nc >= self.width:
+                            continue
+                        self.grid[nr * self.width + nc] = 0
+
+    def _build_cost(self, soft_radius=6):
+        self.cost = [1] * (self.width * self.height)
+        obstacles = [i for i, val in enumerate(self.grid) if val == 0]
+        for idx in obstacles:
+            r = idx // self.width
+            c = idx % self.width
+            for dr in range(-soft_radius, soft_radius + 1):
+                nr = r + dr
+                if nr < 0 or nr >= self.height:
+                    continue
+                for dc in range(-soft_radius, soft_radius + 1):
+                    nc = c + dc
+                    if nc < 0 or nc >= self.width:
+                        continue
+                    dist = max(abs(dr), abs(dc))
+                    if dist == 0:
+                        continue
+                    nxt = nr * self.width + nc
+                    if self.grid[nxt] == 254:
+                        self.cost[nxt] = max(
+                            self.cost[nxt], soft_radius - dist + 1)
+
+    def _to_cell(self, x, y):
+        col = int(round((x - self.origin_x) / self.resolution))
+        row = int(round((self.height - 1) - (y - self.origin_y) / self.resolution))
+        if not (0 <= col < self.width and 0 <= row < self.height):
+            return None
+        return row * self.width + col
+
+    def _to_world(self, idx):
+        row = idx // self.width
+        col = idx % self.width
+        x = self.origin_x + (col + 0.5) * self.resolution
+        y = self.origin_y + (self.height - 1 - row + 0.5) * self.resolution
+        return x, y
+
+    def _heuristic(self, a, b):
+        ar, ac = divmod(a, self.width)
+        br, bc = divmod(b, self.width)
+        return math.hypot(ar - br, ac - bc)
+
+    def _reconstruct(self, came_from, current):
+        cells = []
+        while current is not None:
+            cells.append(current)
+            current = came_from[current]
+        cells.reverse()
+        return [self._to_world(c) for c in cells]
+
+    @staticmethod
+    def _downsample(points, spacing):
+        if not points:
+            return points
+        out = [points[0]]
+        for pt in points[1:]:
+            if math.hypot(pt[0] - out[-1][0], pt[1] - out[-1][1]) >= spacing:
+                out.append(pt)
+        if out[-1] != points[-1]:
+            out.append(points[-1])
+        return out
+
+    def plan(self, start_x, start_y, goal_x, goal_y, spacing=0.2):
+        start = self._to_cell(start_x, start_y)
+        goal = self._to_cell(goal_x, goal_y)
+        if start is None or goal is None:
+            return None
+        if self.grid[start] != 254 or self.grid[goal] != 254:
+            return None
+
+        open_heap = [(0.0, 0, start)]
+        counter = 1
+        g_score = {start: 0.0}
+        came_from = {start: None}
+        closed = set()
+
+        while open_heap:
+            _, _, current = heapq.heappop(open_heap)
+            if current in closed:
+                continue
+            closed.add(current)
+            if current == goal:
+                return self._downsample(self._reconstruct(came_from, current), spacing)
+            cr, cc = divmod(current, self.width)
+            for dr, dc, step_cost in self.NEIGHBORS:
+                nr = cr + dr
+                nc = cc + dc
+                if not (0 <= nr < self.height and 0 <= nc < self.width):
+                    continue
+                nxt = nr * self.width + nc
+                if nxt in closed or self.grid[nxt] != 254:
+                    continue
+                tentative = g_score[current] + step_cost + (self.cost[nxt] - 1) * 0.5
+                if tentative < g_score.get(nxt, math.inf):
+                    g_score[nxt] = tentative
+                    came_from[nxt] = current
+                    heapq.heappush(
+                        open_heap,
+                        (tentative + self._heuristic(nxt, goal), counter, nxt))
+                    counter += 1
+        return None
+
+
 class WaypointNavigator(Node):
     def __init__(self):
         super().__init__('waypoint_navigator')
@@ -184,18 +363,34 @@ class WaypointNavigator(Node):
         self.declare_parameter('map_dir', DEFAULT_MAP_DIR)
         self.declare_parameter('max_map_points', 100000)
         self.declare_parameter('waypoint_file', DEFAULT_WAYPOINT_FILE)
-        self.declare_parameter('max_linear_speed', 0.8)
+        self.declare_parameter('max_linear_speed', 0.55)
+        self.declare_parameter('min_linear_speed', 0.08)
+        self.declare_parameter('approach_distance', 0.6)
+        self.declare_parameter('linear_accel_limit', 1.0)
+        self.declare_parameter('angular_accel_limit', 2.0)
         self.declare_parameter('max_angular_speed', 1.2)
         self.declare_parameter('linear_gain', 1.2)
         self.declare_parameter('angular_gain', 2.5)
         self.declare_parameter('goal_tolerance', 0.08)
         self.declare_parameter('yaw_tolerance', 0.18)
-        self.declare_parameter('obstacle_stop_distance', 0.10)
-        self.declare_parameter('obstacle_slow_distance', 0.35)
-        self.declare_parameter('avoid_gain', 0.8)
+        self.declare_parameter('obstacle_stop_distance', 0.08)
+        self.declare_parameter('obstacle_slow_distance', 0.30)
+        self.declare_parameter('obstacle_stop_angle', 0.5)
+        self.declare_parameter('avoid_gain', 1.2)
+        self.declare_parameter('plan_enabled', True)
+        self.declare_parameter(
+            'plan_map_file',
+            os.path.join(get_package_share_directory('autoVehicle'), 'maps', 'course_map.yaml'))
+        self.declare_parameter('plan_inflation_cells', 3)
+        self.declare_parameter('plan_path_spacing', 0.25)
+        self.declare_parameter('path_lookahead', 0.6)
         self.declare_parameter('control_rate_hz', 20.0)
 
         self.max_linear_speed = self.get_parameter('max_linear_speed').value
+        self.min_linear_speed = float(self.get_parameter('min_linear_speed').value)
+        self.approach_distance = float(self.get_parameter('approach_distance').value)
+        self.linear_accel_limit = float(self.get_parameter('linear_accel_limit').value)
+        self.angular_accel_limit = float(self.get_parameter('angular_accel_limit').value)
         self.max_angular_speed = self.get_parameter('max_angular_speed').value
         self.linear_gain = self.get_parameter('linear_gain').value
         self.angular_gain = self.get_parameter('angular_gain').value
@@ -203,7 +398,13 @@ class WaypointNavigator(Node):
         self.yaw_tolerance = self.get_parameter('yaw_tolerance').value
         self.obstacle_stop = self.get_parameter('obstacle_stop_distance').value
         self.obstacle_slow = self.get_parameter('obstacle_slow_distance').value
+        self.obstacle_stop_angle = float(self.get_parameter('obstacle_stop_angle').value)
         self.avoid_gain = self.get_parameter('avoid_gain').value
+        self.plan_enabled = self.get_parameter('plan_enabled').value
+        self.plan_map_file = self.get_parameter('plan_map_file').value
+        self.plan_inflation_cells = int(self.get_parameter('plan_inflation_cells').value)
+        self.plan_path_spacing = float(self.get_parameter('plan_path_spacing').value)
+        self.path_lookahead = float(self.get_parameter('path_lookahead').value)
         self.waypoint_file = os.path.expanduser(
             self.get_parameter('waypoint_file').value)
 
@@ -214,6 +415,9 @@ class WaypointNavigator(Node):
         self._last_odom_stamp = None
         self.map_points = []
         self.map_path = None
+        self.planner = None
+        self._planned_for = None
+        self._plan_failed_for = None
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -245,16 +449,33 @@ class WaypointNavigator(Node):
         self.add_on_set_parameters_callback(self._param_cb)
 
         rate = self.get_parameter('control_rate_hz').value
+        self.control_rate = float(rate)
+        self._cmd_linear = 0.0
+        self._cmd_angular = 0.0
         self.tf_timer = self.create_timer(0.05, self._tf_pose_cb)
         self.control_timer = self.create_timer(1.0 / rate, self.control_loop)
         self.map_timer = self.create_timer(1.0, self.publish_map)
 
         self._load_pcd_map()
+        self._load_planner()
         os.makedirs(os.path.dirname(self.waypoint_file) or '.', exist_ok=True)
 
         self.get_logger().info(
             f'WaypointNavigator ready | state={self.state} '
             f'map={self.map_path or "none"} waypoints={len(self.waypoints)}')
+
+    def _load_planner(self):
+        if not self.plan_enabled:
+            return
+        try:
+            self.planner = GridPlanner(
+                self.plan_map_file,
+                inflation_cells=self.plan_inflation_cells)
+            self.get_logger().info(
+                f'Loaded A* planner map: {self.plan_map_file} '
+                f'({self.planner.width}x{self.planner.height})')
+        except Exception as exc:
+            self.get_logger().warn(f'A* planner disabled: {exc}')
 
     def _load_pcd_map(self):
         map_file = self.get_parameter('map_file').value
@@ -391,6 +612,10 @@ class WaypointNavigator(Node):
             response.message = 'No waypoints in queue'
             return response
         self.state = 'NAVIGATING'
+        self._planned_for = None
+        self._plan_failed_for = None
+        self._cmd_linear = 0.0
+        self._cmd_angular = 0.0
         response.success = True
         response.message = f'Navigating to {len(self.waypoints)} waypoint(s)'
         self.get_logger().info(response.message)
@@ -399,6 +624,8 @@ class WaypointNavigator(Node):
 
     def stop_cb(self, request, response):
         self.state = 'IDLE'
+        self._cmd_linear = 0.0
+        self._cmd_angular = 0.0
         self.cmd_pub.publish(Twist())
         response.success = True
         response.message = 'Waypoint navigation stopped'
@@ -407,8 +634,12 @@ class WaypointNavigator(Node):
 
     def clear_cb(self, request, response):
         self.state = 'IDLE'
+        self._cmd_linear = 0.0
+        self._cmd_angular = 0.0
         self.cmd_pub.publish(Twist())
         self.waypoints.clear()
+        self._planned_for = None
+        self._plan_failed_for = None
         marker = Marker()
         marker.header.frame_id = 'odom'
         marker.action = Marker.DELETEALL
@@ -445,6 +676,8 @@ class WaypointNavigator(Node):
             with open(self.waypoint_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             self.waypoints = deque(data.get('waypoints', []))
+            self._planned_for = None
+            self._plan_failed_for = None
             self.state = 'IDLE'
             self.cmd_pub.publish(Twist())
             self._publish_visuals()
@@ -505,6 +738,14 @@ class WaypointNavigator(Node):
                 self.linear_gain = param.value
             elif name == 'angular_gain':
                 self.angular_gain = param.value
+            elif name == 'min_linear_speed':
+                self.min_linear_speed = param.value
+            elif name == 'approach_distance':
+                self.approach_distance = param.value
+            elif name == 'linear_accel_limit':
+                self.linear_accel_limit = param.value
+            elif name == 'angular_accel_limit':
+                self.angular_accel_limit = param.value
             elif name == 'goal_tolerance':
                 self.goal_tolerance = param.value
             elif name == 'yaw_tolerance':
@@ -513,6 +754,8 @@ class WaypointNavigator(Node):
                 self.obstacle_stop = param.value
             elif name == 'obstacle_slow_distance':
                 self.obstacle_slow = param.value
+            elif name == 'obstacle_stop_angle':
+                self.obstacle_stop_angle = param.value
             elif name == 'avoid_gain':
                 self.avoid_gain = param.value
         return SetParametersResult(successful=True, reason='speed parameters updated')
@@ -595,7 +838,8 @@ class WaypointNavigator(Node):
                     bearing = math.atan2(by, bx)
                     if bx > 0.02 and abs(bearing) < math.pi / 2.0:
                         distance = math.hypot(bx, by)
-                        min_front = min(min_front, distance)
+                        if abs(bearing) < self.obstacle_stop_angle:
+                            min_front = min(min_front, distance)
                         if distance < 0.6:
                             weight = max(0.0, 1.0 - distance / 0.6)
                             if by > 0.0:
@@ -610,6 +854,88 @@ class WaypointNavigator(Node):
             if total > 1e-6:
                 avoid = self.avoid_gain * (right_risk - left_risk) / total
         return min_front, avoid
+
+    def _ensure_path_planned(self, x, y, target):
+        if not self.plan_enabled or self.planner is None:
+            return
+        if target.get('planned'):
+            return
+        key = (round(target['x'], 3), round(target['y'], 3))
+        if self._planned_for == key or self._plan_failed_for == key:
+            return
+        self._planned_for = key
+        try:
+            path = self.planner.plan(
+                x, y, target['x'], target['y'],
+                spacing=self.plan_path_spacing)
+        except Exception as exc:
+            self.get_logger().warn(f'Path planning failed: {exc}')
+            self._plan_failed_for = key
+            return
+        if not path or len(path) < 2:
+            self.get_logger().warn(
+                f'No valid path to ({target["x"]:.2f}, {target["y"]:.2f})')
+            self._plan_failed_for = key
+            return
+
+        inter = []
+        for i, pt in enumerate(path[:-1]):
+            nx, ny = path[i + 1]
+            yaw = math.atan2(ny - pt[1], nx - pt[0])
+            inter.append({
+                'x': pt[0], 'y': pt[1], 'z': target['z'],
+                'yaw': yaw, 'planned': True,
+            })
+        if inter and math.hypot(inter[0]['x'] - x, inter[0]['y'] - y) <= self.goal_tolerance:
+            inter.pop(0)
+        if not inter:
+            return
+        rest = list(self.waypoints)
+        self.waypoints = deque(inter + [target] + rest[1:])
+        self.get_logger().info(
+            f'Planned {len(inter)} path points to ({target["x"]:.2f}, {target["y"]:.2f})')
+        self._publish_visuals()
+
+    def _smooth_cmd(self, desired_linear, desired_angular):
+        dt = 1.0 / self.control_rate
+        max_lin_step = self.linear_accel_limit * dt
+        max_ang_step = self.angular_accel_limit * dt
+        self._cmd_linear = _clamp(
+            desired_linear,
+            self._cmd_linear - max_lin_step,
+            self._cmd_linear + max_lin_step)
+        self._cmd_angular = _clamp(
+            desired_angular,
+            self._cmd_angular - max_ang_step,
+            self._cmd_angular + max_ang_step)
+        return self._cmd_linear, self._cmd_angular
+
+    def _pop_passed_planned_points(self, x, y):
+        while len(self.waypoints) >= 2 and self.waypoints[0].get('planned'):
+            current = self.waypoints[0]
+            nxt = self.waypoints[1]
+            d_cur = math.hypot(current['x'] - x, current['y'] - y)
+            d_nxt = math.hypot(nxt['x'] - x, nxt['y'] - y)
+            if d_cur < self.goal_tolerance or d_nxt < d_cur:
+                self.waypoints.popleft()
+            else:
+                break
+
+    def _select_path_target(self, x, y):
+        if not self.waypoints:
+            return None
+        if not self.waypoints[0].get('planned'):
+            return self.waypoints[0]
+        best = self.waypoints[-1]
+        for wp in self.waypoints:
+            if not wp.get('planned'):
+                best = wp
+                break
+            if math.hypot(wp['x'] - x, wp['y'] - y) >= self.path_lookahead:
+                best = wp
+                break
+            best = wp
+        return best
 
     def control_loop(self):
         if self.state != 'NAVIGATING':
@@ -630,28 +956,42 @@ class WaypointNavigator(Node):
 
         x, y, _z, yaw = self._odom
         target = self.waypoints[0]
+        self._ensure_path_planned(x, y, target)
+        self._pop_passed_planned_points(x, y)
+        target = self._select_path_target(x, y)
+        if target is None:
+            return
         dx = target['x'] - x
         dy = target['y'] - y
         distance = math.hypot(dx, dy)
         desired_yaw = math.atan2(dy, dx)
         yaw_error = _normalize_angle(desired_yaw - yaw)
 
+        is_planned = bool(target.get('planned'))
         twist = Twist()
         if distance <= self.goal_tolerance:
-            if abs(yaw_error) <= self.yaw_tolerance:
+            if is_planned or abs(yaw_error) <= self.yaw_tolerance:
+                if not is_planned:
+                    self._planned_for = None
                 self.waypoints.popleft()
                 self.get_logger().info(
-                    f'Reached waypoint, {len(self.waypoints)} remaining')
+                    f'{"Passed planned point" if is_planned else "Reached waypoint"}, '
+                    f'{len(self.waypoints)} remaining')
                 self._publish_visuals()
                 if not self.waypoints:
                     self.state = 'IDLE'
                     self.cmd_pub.publish(Twist())
                 return
-            twist.linear.x = 0.0
-            twist.angular.z = _clamp(
+            desired_angular = _clamp(
                 yaw_error * self.angular_gain, -self.max_angular_speed, self.max_angular_speed)
+            twist.linear.x, twist.angular.z = self._smooth_cmd(0.0, desired_angular)
         else:
-            linear = _clamp(distance * self.linear_gain, 0.0, self.max_linear_speed)
+            if is_planned or distance >= self.approach_distance:
+                linear = self.max_linear_speed
+            else:
+                linear = max(
+                    self.min_linear_speed,
+                    self.max_linear_speed * (distance / self.approach_distance))
             angular = _clamp(
                 yaw_error * self.angular_gain, -self.max_angular_speed, self.max_angular_speed)
             if abs(yaw_error) > math.radians(75.0):
@@ -668,8 +1008,7 @@ class WaypointNavigator(Node):
                     / (self.obstacle_slow - self.obstacle_stop))
             angular = _clamp(
                 angular + avoid, -self.max_angular_speed, self.max_angular_speed)
-            twist.linear.x = linear
-            twist.angular.z = angular
+            twist.linear.x, twist.angular.z = self._smooth_cmd(linear, angular)
 
         self.cmd_pub.publish(twist)
 

@@ -77,10 +77,14 @@ class IntegratedMapper(Node):
         self.declare_parameter('rate_hz', 10.0)
         self.declare_parameter('wall_interp_step', 0.05)
         self.declare_parameter('max_wall_interp_gap', 0.8)
+        self.declare_parameter('enable_mapping', True)
+        self.declare_parameter('publish_pointcloud_map', True)
         self.num_samples = int(self.get_parameter('num_samples').value)
         self.rate_hz = float(self.get_parameter('rate_hz').value)
         self.wall_interp_step = float(self.get_parameter('wall_interp_step').value)
         self.max_wall_interp_gap = float(self.get_parameter('max_wall_interp_gap').value)
+        self.enable_mapping = bool(self.get_parameter('enable_mapping').value)
+        self.publish_pointcloud_map = bool(self.get_parameter('publish_pointcloud_map').value)
         self.save_dir=os.path.expanduser('~/pointcloud_maps')
         os.makedirs(self.save_dir,exist_ok=True)
         self.save_srv=self.create_service(Trigger,'/save_map',self.save_cb)
@@ -88,8 +92,8 @@ class IntegratedMapper(Node):
         self._cnt=0
         self._sw=0
         self.get_logger().info(
-            f'IntegratedMapper | scan+floor+map @{self.rate_hz}Hz '
-            f'rays={self.num_samples} interp={self.wall_interp_step:.2f}m')
+            f'IntegratedMapper | scan @{self.rate_hz}Hz '
+            f'rays={self.num_samples} mapping={self.enable_mapping}')
         self.timer=self.create_timer(1.0/self.rate_hz,self.tick)
         self.map_timer=self.create_timer(0.5,self.publish_map)
 
@@ -127,66 +131,69 @@ class IntegratedMapper(Node):
             r=raycast(lx,ly,lz,world_ang,include_ramp=False)
             if r<RNG_MAX:
                 rng.append(r)
-                px=r*math.cos(ang); py=r*math.sin(ang); pz=0.0
-                wx_w=r00*px+r01*py+r02*pz+lx
-                wy_w=r10*px+r11*py+r12*pz+ly
-                wz_w=r20*px+r21*py+r22*pz+lz
-                # Main hit point
-                wpts.append((wx_w, wy_w, wz_w, 0.4))
-                # Vertical wall fill: generate points from floor to wall top
-                fz_wall=floor_z(wx_w)
-                for vz in (fz_wall, fz_wall+0.1, fz_wall+0.2):
-                    if abs(vz-wz_w)>0.01:  # skip if same as hit point
-                        wpts.append((wx_w, wy_w, vz, 0.35))
-                # Interpolate between adjacent hits to fill protruding walls
-                if prev_valid:
-                    gap=math.hypot(wx_w-prev_wx, wy_w-prev_wy)
-                    if gap<=self.max_wall_interp_gap:
-                        steps=int(gap/self.wall_interp_step)
-                        for k in range(1, steps):
-                            t=k/steps
-                            ix=prev_wx+(wx_w-prev_wx)*t
-                            iy=prev_wy+(wy_w-prev_wy)*t
-                            fz=floor_z(ix)
-                            for vz in (fz, fz+0.1, fz+0.2):
-                                wpts.append((ix, iy, vz, 0.35))
-                prev_valid=True
-                prev_wx=wx_w; prev_wy=wy_w
+                if self.enable_mapping:
+                    px=r*math.cos(ang); py=r*math.sin(ang); pz=0.0
+                    wx_w=r00*px+r01*py+r02*pz+lx
+                    wy_w=r10*px+r11*py+r12*pz+ly
+                    wz_w=r20*px+r21*py+r22*pz+lz
+                    # Main hit point
+                    wpts.append((wx_w, wy_w, wz_w, 0.4))
+                    # Vertical wall fill: generate points from floor to wall top
+                    fz_wall=floor_z(wx_w)
+                    for vz in (fz_wall, fz_wall+0.1, fz_wall+0.2):
+                        if abs(vz-wz_w)>0.01:  # skip if same as hit point
+                            wpts.append((wx_w, wy_w, vz, 0.35))
+                    # Interpolate between adjacent hits to fill protruding walls
+                    if prev_valid:
+                        gap=math.hypot(wx_w-prev_wx, wy_w-prev_wy)
+                        if gap<=self.max_wall_interp_gap:
+                            steps=int(gap/self.wall_interp_step)
+                            for k in range(1, steps):
+                                t=k/steps
+                                ix=prev_wx+(wx_w-prev_wx)*t
+                                iy=prev_wy+(wy_w-prev_wy)*t
+                                fz=floor_z(ix)
+                                for vz in (fz, fz+0.1, fz+0.2):
+                                    wpts.append((ix, iy, vz, 0.35))
+                    prev_valid=True
+                    prev_wx=wx_w; prev_wy=wy_w
             else:
                 rng.append(float('nan'))
                 prev_valid=False
             ang+=s.angle_increment
         s.ranges=rng; self.sp.publish(s)
-        self.map_pts.extend(wpts)
+        if self.enable_mapping:
+            self.map_pts.extend(wpts)
 
-        # ── Floor scan ─────────────────────────────────────────────
-        fp_pts=[]
+        # ── Floor scan (mapping only) ──────────────────────────────
         fp_world=[]
-        for ai in range(36):
-            az=ai*2*math.pi/36; dx=math.cos(az); dy=math.sin(az)
-            for ri in range(1,11):
-                dist=ri*0.5; wx=lx+dx*dist; wy=ly+dy*dist; wz=floor_z(wx)
-                ok=True
-                if wx<CORR_END:
-                    if abs(wy)>HW: ok=False
-                else:
-                    if not(JUNC_L<=wx<=JUNC_R): ok=False
-                    if abs(wy)>JUNC_MAX_Y: ok=False
-                if ok:
-                    fp_pts.append((wx-lx,wy-ly,wz-lz,0.7))
-                    fp_world.append((wx,wy,wz,0.7))
-        pc=PointCloud2(); pc.header.stamp=self.get_clock().now().to_msg()
-        pc.header.frame_id='radar_link'; pc.height=1
-        pc.width=len(fp_pts)
-        pc.fields=[PointField(name='x',offset=0,datatype=PointField.FLOAT32,count=1),
-                   PointField(name='y',offset=4,datatype=PointField.FLOAT32,count=1),
-                   PointField(name='z',offset=8,datatype=PointField.FLOAT32,count=1),
-                   PointField(name='intensity',offset=12,datatype=PointField.FLOAT32,count=1)]
-        pc.is_bigendian=False; pc.point_step=16; pc.row_step=16*len(fp_pts)
-        pc.is_dense=True
-        pc.data=b''.join(struct.pack('<ffff',x,y,z,i) for(x,y,z,i) in fp_pts)
-        self.fp.publish(pc)
-        self.map_pts.extend(fp_world)
+        if self.enable_mapping:
+            fp_pts=[]
+            for ai in range(36):
+                az=ai*2*math.pi/36; dx=math.cos(az); dy=math.sin(az)
+                for ri in range(1,11):
+                    dist=ri*0.5; wx=lx+dx*dist; wy=ly+dy*dist; wz=floor_z(wx)
+                    ok=True
+                    if wx<CORR_END:
+                        if abs(wy)>HW: ok=False
+                    else:
+                        if not(JUNC_L<=wx<=JUNC_R): ok=False
+                        if abs(wy)>JUNC_MAX_Y: ok=False
+                    if ok:
+                        fp_pts.append((wx-lx,wy-ly,wz-lz,0.7))
+                        fp_world.append((wx,wy,wz,0.7))
+            pc=PointCloud2(); pc.header.stamp=self.get_clock().now().to_msg()
+            pc.header.frame_id='radar_link'; pc.height=1
+            pc.width=len(fp_pts)
+            pc.fields=[PointField(name='x',offset=0,datatype=PointField.FLOAT32,count=1),
+                       PointField(name='y',offset=4,datatype=PointField.FLOAT32,count=1),
+                       PointField(name='z',offset=8,datatype=PointField.FLOAT32,count=1),
+                       PointField(name='intensity',offset=12,datatype=PointField.FLOAT32,count=1)]
+            pc.is_bigendian=False; pc.point_step=16; pc.row_step=16*len(fp_pts)
+            pc.is_dense=True
+            pc.data=b''.join(struct.pack('<ffff',x,y,z,i) for(x,y,z,i) in fp_pts)
+            self.fp.publish(pc)
+            self.map_pts.extend(fp_world)
 
         self._cnt+=1
         if self._cnt<=3:
@@ -201,6 +208,8 @@ class IntegratedMapper(Node):
                 f'(saved {self._sw}x) @({lx:.2f},{ly:.2f},{lz:.2f})')
 
     def publish_map(self):
+        if not self.enable_mapping or not self.publish_pointcloud_map:
+            return
         if len(self.map_pts)<10: return
         pts=self.map_pts
         if len(pts)>200000: pts=pts[::max(1,len(pts)//200000)]
@@ -216,6 +225,8 @@ class IntegratedMapper(Node):
         self.mp.publish(pc)
 
     def save_cb(self,req,rsp):
+        if not self.enable_mapping:
+            rsp.success=False; rsp.message='mapping disabled'; return rsp
         if not self.map_pts: rsp.success=False; rsp.message='empty'; return rsp
         ts=time.strftime('%Y%m%d_%H%M%S')
         fn=os.path.join(self.save_dir,f'map_{ts}.pcd')
