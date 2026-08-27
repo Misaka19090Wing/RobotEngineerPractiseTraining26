@@ -303,7 +303,7 @@ rotate_to_heading_angular_vel: 1.5
 max_angular_accel: 3.0
 use_rotate_to_heading: true
 use_collision_detection: false
-use_regulated_linear_velocity_scaling: false
+use_regulated_linear_velocity_scaling: true
 use_cost_regulated_linear_velocity_scaling: false
 ```
 

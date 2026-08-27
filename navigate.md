@@ -204,12 +204,22 @@ min_lookahead_dist: 0.3
 max_lookahead_dist: 0.9
 rotate_to_heading_angular_vel: 1.5
 use_collision_detection: false
-use_regulated_linear_velocity_scaling: false
+use_regulated_linear_velocity_scaling: true
 use_cost_regulated_linear_velocity_scaling: false
 use_rotate_to_heading: false
 robot_radius: 0.07
 inflation_radius: 0.10
 ```
+
+转弯减速参数：
+
+```text
+regulated_linear_scaling_min_radius: 0.9   # 转弯半径小于该值开始减速
+regulated_linear_scaling_min_speed: 0.1    # 转弯时的最低线速度
+```
+
+- 想转弯更慢：调大 `regulated_linear_scaling_min_radius`
+- 想转弯最低速度更低：调小 `regulated_linear_scaling_min_speed`
 
 局部控制器已从 DWB 改为 Regulated Pure Pursuit，更适合窄走廊和 Seg3→Seg4 这种拐弯场景，能明显减少贴墙、右墙停住再重规划的现象。
 
