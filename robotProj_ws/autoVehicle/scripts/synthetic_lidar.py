@@ -140,7 +140,10 @@ class IntegratedMapper(Node):
             for ri in range(1,11):
                 dist=ri*0.5; wx=lx+dx*dist; wy=ly+dy*dist; wz=floor_z(wx)
                 ok=True
-                if wx<CORR_END:
+                # The corridor floor only exists for x in [0, CORR_END]; without
+                # the lower bound the backward rays fabricated floor points up to
+                # 5 m behind the tray start.
+                if 0.0<=wx<CORR_END:
                     if abs(wy)>HW: ok=False
                 else:
                     if not(JUNC_L<=wx<=JUNC_R): ok=False
