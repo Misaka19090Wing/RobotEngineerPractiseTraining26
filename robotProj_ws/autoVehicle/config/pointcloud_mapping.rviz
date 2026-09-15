@@ -84,6 +84,21 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /waypoint_markers
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Distance Markers
+      Namespaces:
+        distance_text: true
+        distance_rays: true
+        distance_span: true
+        distance_ends: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /distance_markers
+      Value: true
     - Class: rviz_default_plugins/Path
       Color: 255; 85; 255
       Enabled: true

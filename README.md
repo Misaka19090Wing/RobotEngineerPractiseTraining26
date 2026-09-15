@@ -8,10 +8,11 @@
 - [x] **PCD 地图保存** — 自动/手动保存 ASCII PCD 文件
 - [x] **航点自主导航** — 基于已保存 PCD 地图手动设立航点
 - [x] **Nav2 预建图导航** — `nav_map.launch.py` 可选启动
+- [x] **实时距离测量** — 前方障碍/左右壁距/净宽 + 累计里程与桥架长度（`distance_measure.py`）
 - [ ] 传感器融合（IMU + 里程计）
 - [ ] SLAM / 完整导航栈
 
-> **详细文档**：仿真实现与建图见 [pointCloud.md](pointCloud.md)，导航与排障见 [navigate.md](navigate.md)。
+> **详细文档**：仿真实现与建图见 [pointCloud.md](pointCloud.md)，导航与排障见 [navigate.md](navigate.md)，距离测量见 [distance.md](distance.md)。
 
 ---
 
@@ -141,7 +142,9 @@ $$
 | **pose_tf_broadcaster** | `pose_tf_broadcaster.py` | 订阅 `/odom`，发布动态 `odom→base_footprint` TF |
 | **synthetic_lidar** ★ | `synthetic_lidar.py` | **集成 LiDAR 扫描 + 点云累积 + 地图发布 + PCD 保存** |
 | **waypoint_navigator** ★ | `waypoint_navigator.py` | **加载 PCD 地图、手动航点队列、差速巡航 + 激光避障** |
+| **distance_measure** ★ | `distance_measure.py` | **实时测距：前方障碍、左右壁距、桥架净宽、累计里程、桥架长度；RViz 文字/射线叠加 + JSON/CSV 报告** |
 | `waypoint_cli` | `waypoint_cli.py` | 命令行添加/启停/保存航点 |
+| `distance_cli` | `distance_cli.py` | 命令行查询/保存/复位测距结果 |
 | `generate_course_map` | `generate_course_map.py` | 按赛道几何生成 Nav2 使用的 `course_map.pgm/yaml` |
 | `robot_state_publisher` | ROS2 标准 | 从 URDF 发布 `base_link→child_links` TF |
 | `joint_state_publisher` | ROS2 标准 | 发布零位关节状态，驱动轮子 TF |
@@ -183,6 +186,14 @@ nav_map.launch.py ← course_map + /scan + TF
        ├── planner_server   → 路径规划
        ├── controller_server → /cmd_vel → diff_drive_controller
        └── /goal_pose       ← RViz2 2D Goal Pose
+
+distance_measure.py ← /scan + /odom + /pointcloud_map
+       │
+       ├── /distance/forward|left|right|width|traveled|tray_length → 其他节点
+       ├── /distance/status  → 单行文本摘要
+       ├── /distance_markers → RViz2 量测射线/净宽连线/文字叠加
+       ├── /distance/status|reset|save (服务)
+       └── /distance/save    → ~/distance_reports/*.json + *.csv
 ```
 
 完整 TF 树：
@@ -301,7 +312,41 @@ ros2 run autoVehicle waypoint_cli.py status
 
 当前 `nav_map.launch.py` 未启动 `collision_monitor`，避免之前出现的参数解析错误；窄走廊和坡道参数已写入 `nav2_params.yaml`。
 
-### 6.5 测试结果
+### 6.5 实时距离测量
+
+`distance_measure.py` 随 `gazebo.launch.py` 自动启动，边行驶边输出测量值：
+
+| 测量项 | 话题 | 说明 |
+|---|---|---|
+| 前方障碍距离 | `/distance/forward` | 机器人前方**车道内**最近障碍（不是固定角度扇区） |
+| 左壁 / 右壁距离 | `/distance/left` `/distance/right` | ±90° 扇区内的最近壁面 |
+| 桥架净宽 | `/distance/width` | 左壁 + 右壁，传感器横向偏移自动抵消 |
+| 累计里程 | `/distance/traveled` | 由 `/odom` 路径积分得到 |
+| 桥架长度 | `/distance/tray_length` | 已建点云沿主轴（2D PCA）的跨度；无地图时回退为累计里程 |
+
+量测结果同时以 RViz 文字叠加 + 量测射线（近距红 / 预警橙 / 安全绿）显示在
+`/distance_markers`；`pointcloud_mapping.rviz` 中已添加 **Distance Markers** 显示器。
+
+命令行查询与保存（仿真运行中另开终端）：
+
+```bash
+ros2 run autoVehicle distance_cli.py show      # 逐项打印全部测量话题
+ros2 run autoVehicle distance_cli.py status    # 打印单行摘要
+ros2 run autoVehicle distance_cli.py save      # 保存 JSON 报告 + CSV 时序
+ros2 run autoVehicle distance_cli.py reset     # 里程与统计清零
+```
+
+`save` 会在 `~/distance_reports/` 生成 `distance_<时间戳>.json`（统计与桥架起止点）
+和 `distance_<时间戳>.csv`（逐采样时序，便于写报告/画曲线）。
+
+服务方式等价：`/distance/status`、`/distance/save`、`/distance/reset`（均为
+`std_srvs/Trigger`）。
+
+> 测距基准为雷达坐标系 `radar_link`（与 `waypoint_navigator` 的避障逻辑一致）。
+> 前方障碍采用**车道门限**而非固定角度扇区：桥架仅约 0.30 m 宽，固定扇区的
+> 边缘射线会打到侧壁（约 0.5 m）而被误判为前方障碍。
+
+### 6.6 测试结果
 
 - 扫描速率：10Hz（360 射线 + 环形地面扫描）
 - 单帧点数：~400-500（含墙壁垂直填充 + 地面点阵）
@@ -311,6 +356,8 @@ ros2 run autoVehicle waypoint_cli.py status
 - 自定义航点：服务添加航点后机器人可自动行驶，`/cmd_vel` 正常输出
 - Nav2 规划：`ComputePathToPose` 在平直段和坡上均能成功返回路径
 - 点云实时显示墙壁表面（3D）、地面高程（含坡面）、走廊轮廓
+- 距离测量：平直段实测净宽 **0.300 m**、左/右壁距 **0.134 / 0.166 m**、
+  桥架长度 **22.88 m**，均与赛道几何精确吻合；里程随行驶线性累加
 
 ---
 
@@ -321,6 +368,7 @@ ros2 run autoVehicle waypoint_cli.py status
 - **爬坡能力**：电磁铁吸附安全余量充足，45° 斜坡可靠通过 ✓
 - **遥控建图**：仿真环境已实现 3D 点云建图与 PCD 保存 ✓
 - **里程精度**：仿真使用地面真实里程计，无漂移
+- **距离测量**：实时前方/侧向测距 + 净宽 + 累计里程 + 桥架长度，支持 RViz 叠加、话题、CLI 与 JSON/CSV 报告 ✓
 - **感知与导航**：仿真 LiDAR 10Hz，PCD 航点巡航与 Nav2 预建图导航已实现 ✓
 
 ---
@@ -329,4 +377,5 @@ ros2 run autoVehicle waypoint_cli.py status
 
 - [pointCloud.md](pointCloud.md) — 点云建图详细文档（架构、核心组件、赛道模型、Bug 修复历程）
 - [navigate.md](navigate.md) — 航点导航、Nav2 配置与上坡排障整理
+- [distance.md](distance.md) — 距离测量功能（测量定义、参数、输出、实测校核）
 - [testlog.md](testlog.md) — Gazebo 仿真测试日志（摩擦调试、控制器选择等历史记录）

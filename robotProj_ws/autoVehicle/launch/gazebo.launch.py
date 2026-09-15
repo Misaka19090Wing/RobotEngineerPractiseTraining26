@@ -86,6 +86,11 @@ def generate_launch_description():
         name='synthetic_lidar', output='screen',
         parameters=[{'num_samples':360, 'rate_hz':10.0}])])
 
+    distance_measure = TimerAction(period=6.0, actions=[Node(
+        package='autoVehicle', executable='distance_measure.py',
+        name='distance_measure', output='screen',
+        parameters=[{'report_dir': LaunchConfiguration('report_dir')}])])
+
     waypoint_nav = TimerAction(period=7.0, actions=[Node(
         package='autoVehicle', executable='waypoint_navigator.py',
         name='waypoint_navigator', output='screen',
@@ -101,8 +106,11 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value='course_test.sdf'),
+        DeclareLaunchArgument(
+            'report_dir',
+            default_value=os.path.expanduser('~/distance_reports')),
         gz_sim, robot_state_pub, joint_state_pub, tf_ftb, tf_ofb,
         bridge_cmd_vel, bridge_odom, bridge_imu, *bridge_joints,
-        spawn, controller, pose_tf, synth_lidar, waypoint_nav,
+        spawn, controller, pose_tf, synth_lidar, distance_measure, waypoint_nav,
         rviz, ros_diag,
     ])

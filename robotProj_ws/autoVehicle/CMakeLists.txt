@@ -17,6 +17,8 @@ install(PROGRAMS
   scripts/pose_tf_broadcaster.py
   scripts/waypoint_navigator.py
   scripts/waypoint_cli.py
+  scripts/distance_measure.py
+  scripts/distance_cli.py
   scripts/generate_course_map.py
   DESTINATION lib/${PROJECT_NAME}
 )
